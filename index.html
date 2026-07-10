@@ -326,6 +326,51 @@ h1{
   font-family:inherit;
 }
 
+.week-nav{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin-top:2px;
+  margin-bottom:8px;
+}
+.week-nav button{
+  width:32px;height:32px;
+  flex:none;
+  border:1px solid var(--border);
+  background:var(--bg);
+  color:var(--text);
+  border-radius:50%;
+  font-size:16px;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-family:inherit;
+}
+.week-nav button:active{background:var(--surface);}
+.week-nav .wlabel{
+  flex:1;
+  text-align:center;
+  font-size:14px;
+  font-weight:500;
+  color:var(--text);
+}
+.week-nav .wlabel small{
+  display:block;
+  font-size:11px;
+  font-weight:400;
+  color:var(--text2);
+  margin-top:1px;
+}
+.week-nav .todayBtn{
+  width:auto;
+  border-radius:14px;
+  padding:0 10px;
+  font-size:11.5px;
+  color:var(--blue);
+  border-color:var(--border);
+}
+
 footer{
   margin:18px 16px 0;
   font-size:11px;
@@ -338,6 +383,12 @@ footer{
   <header>
     <div class="eyebrow">Fundamental</div>
     <h1>本週班表</h1>
+    <div class="week-nav">
+      <button id="prevWeek" title="上一週">‹</button>
+      <div class="wlabel" id="weekLabel">讀取中…</div>
+      <button id="nextWeek" title="下一週">›</button>
+      <button id="todayBtn" class="todayBtn">本週</button>
+    </div>
     <div class="sync-bar">
       <span class="sync-dot" id="syncDot"></span>
       <span id="syncText">連線中…</span>
@@ -361,7 +412,7 @@ footer{
 
 <script>
 const SPREADSHEET_ID = '15hFGI2QqKJrGic60pGQOcEPUH3UDQnbpl6VnIcJchWA';
-const CSV_URL = 'https://docs.google.com/spreadsheets/d/' + SPREADSHEET_ID + '/gviz/tq?tqx=out:csv';
+const CSV_BASE = 'https://docs.google.com/spreadsheets/d/' + SPREADSHEET_ID + '/gviz/tq?tqx=out:csv';
 const AUTO_REFRESH_MS = 60000; // 每 60 秒自動重新讀取一次
 
 const WEEKDAYS = ['週一','週二','週三','週四','週五','週六','週日'];
@@ -370,6 +421,34 @@ const DAYS = ['一','二','三','四','五','六','日'];
 let DATA = {};      // { 姓名: [ '11~18', null, ... 7 個 ] }
 let DATES = [];     // 7 個日期字串，例如 '7/20'
 let currentView = 'person'; // 'person' | 'day'
+
+/* ---------------- 週別（分頁名稱：班表(MM/DD)，MM/DD 為該週週一）---------------- */
+function mondayOf(d){
+  const day = d.getDay(); // 0=週日 ... 6=週六
+  const diff = (day === 0 ? -6 : 1 - day);
+  const m = new Date(d);
+  m.setDate(d.getDate() + diff);
+  m.setHours(0,0,0,0);
+  return m;
+}
+function fmtMD(d){
+  return String(d.getMonth()+1).padStart(2,'0') + '/' + String(d.getDate()).padStart(2,'0');
+}
+function sheetNameFor(monday){
+  return fmtMD(monday).replace('/', '');
+}
+function fullyEncode(str){
+  // encodeURIComponent 預設不會跳脫 ( ) ! ' *，這裡強制全部跳脫，
+  // 避免 Google gviz 端點對括號/斜線的解析出現落差（純數字分頁名稱通常用不到，但保留以防萬一）
+  return encodeURIComponent(str).replace(/[!'()*]/g, c => '%' + c.charCodeAt(0).toString(16).toUpperCase());
+}
+function sundayOf(monday){
+  const s = new Date(monday);
+  s.setDate(monday.getDate()+6);
+  return s;
+}
+
+let currentMonday = mondayOf(new Date());
 
 /* ---------------- CSV 解析 ---------------- */
 function parseCSV(text){
@@ -454,13 +533,24 @@ function totalHours(name){
 }
 
 /* ---------------- 讀取 Google 試算表 ---------------- */
+function updateWeekLabel(){
+  const monday = currentMonday, sunday = sundayOf(currentMonday);
+  document.getElementById('weekLabel').innerHTML =
+    `${sheetNameFor(monday)}<small>${fmtMD(monday)} – ${fmtMD(sunday)}</small>`;
+}
+
 async function loadData(){
+  updateWeekLabel();
   setSync('loading','讀取中…');
   document.getElementById('errorBox').style.display = 'none';
+  const sheetName = sheetNameFor(currentMonday);
+  const url = CSV_BASE + '&sheet=' + fullyEncode(sheetName) + '&_=' + Date.now();
   try{
-    const res = await fetch(CSV_URL + '&_=' + Date.now());
-    if(!res.ok) throw new Error('HTTP '+res.status);
+    const res = await fetch(url);
     const text = await res.text();
+    if(!res.ok || /^\s*</.test(text) || /Invalid query|does not exist|invalid_query/i.test(text)){
+      throw new Error('sheet-not-found: HTTP ' + res.status);
+    }
     const {data, dates} = extractSchedule(parseCSV(text));
     DATA = data; DATES = dates;
     const now = new Date();
@@ -468,7 +558,13 @@ async function loadData(){
     renderAll();
   } catch(err){
     setSync('err','讀取失敗');
-    document.getElementById('errorBox').style.display = 'block';
+    const box = document.getElementById('errorBox');
+    box.innerHTML = `找不到「${sheetName}」這個分頁,或無法讀取。<br><br>
+      你可以點下面這個連結,直接在瀏覽器打開看 Google 回傳的實際內容,協助判斷問題:<br>
+      <a href="${url}" target="_blank" style="word-break:break-all;color:#1A73E8;">${url}</a>
+      <button id="retryBtn">重試</button>`;
+    box.style.display = 'block';
+    document.getElementById('retryBtn').onclick = loadData;
     console.error(err);
   }
 }
@@ -571,7 +667,18 @@ function renderAll(){
 }
 
 document.getElementById('refreshBtn').onclick = loadData;
-document.getElementById('retryBtn').onclick = loadData;
+document.getElementById('prevWeek').onclick = ()=>{
+  currentMonday.setDate(currentMonday.getDate()-7);
+  loadData();
+};
+document.getElementById('nextWeek').onclick = ()=>{
+  currentMonday.setDate(currentMonday.getDate()+7);
+  loadData();
+};
+document.getElementById('todayBtn').onclick = ()=>{
+  currentMonday = mondayOf(new Date());
+  loadData();
+};
 
 loadData();
 setInterval(loadData, AUTO_REFRESH_MS);
