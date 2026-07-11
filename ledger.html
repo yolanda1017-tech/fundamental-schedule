@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fundamental 班表</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@700&family=Noto+Sans+TC:wght@400;500;700&family=IBM+Plex+Mono:wght@500;600&display=swap');
+
+:root{
+  --ink:#1E2A38;
+  --ink-soft:#5A6B7D;
+  --paper:#F7F1E4;
+  --card:#FFFCF5;
+  --brass:#B8863E;
+  --brass-deep:#8C6529;
+  --teal:#3F6B5E;
+  --brick:#A8412B;
+  --line:#DED0A8;
+}
+
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:'Noto Sans TC','Noto Sans',sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+
+.wrap{
+  max-width:480px;
+  margin:0 auto;
+  padding:18px 14px 40px;
+}
+
+/* header */
+header{
+  position:sticky;
+  top:0;
+  z-index:5;
+  background:var(--paper);
+  padding-bottom:10px;
+  margin-bottom:6px;
+}
+.eyebrow{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:10.5px;
+  letter-spacing:.16em;
+  color:var(--brass-deep);
+  text-transform:uppercase;
+}
+h1{
+  font-family:'Noto Serif TC',serif;
+  font-size:24px;
+  margin:2px 0 12px;
+  font-weight:700;
+}
+
+.week-toggle{
+  display:flex;
+  border:1.5px solid var(--ink);
+  border-radius:8px;
+  overflow:hidden;
+  font-family:'IBM Plex Mono',monospace;
+  font-size:13px;
+}
+.week-toggle button{
+  flex:1;
+  border:none;
+  background:var(--card);
+  color:var(--ink);
+  padding:10px 6px;
+  cursor:pointer;
+  font-family:inherit;
+  font-size:inherit;
+  font-weight:600;
+}
+.week-toggle button + button{border-left:1.5px solid var(--ink);}
+.week-toggle button.active{background:var(--ink);color:var(--paper);}
+
+.week-nav{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin-top:10px;
+}
+.week-nav button{
+  width:32px;height:32px;
+  flex:none;
+  border:1.5px solid var(--ink);
+  background:var(--card);
+  color:var(--ink);
+  border-radius:50%;
+  font-size:16px;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-family:inherit;
+}
+.week-nav button:active{background:var(--paper);}
+.week-nav .wlabel{
+  flex:1;
+  text-align:center;
+  font-family:'IBM Plex Mono',monospace;
+  font-size:13px;
+  font-weight:600;
+  color:var(--ink);
+}
+.week-nav .wlabel small{
+  display:block;
+  font-size:10.5px;
+  font-weight:400;
+  color:var(--ink-soft);
+  margin-top:1px;
+}
+.week-nav .todayBtn{
+  width:auto;
+  border-radius:14px;
+  padding:0 10px;
+  font-size:11px;
+  font-family:'IBM Plex Mono',monospace;
+  color:var(--brass-deep);
+}
+
+.sync-bar{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-size:11.5px;
+  color:var(--ink-soft);
+  margin-top:8px;
+}
+.sync-dot{
+  width:7px;height:7px;border-radius:50%;
+  background:#9AA0A6;
+  flex:none;
+}
+.sync-dot.ok{background:var(--teal);}
+.sync-dot.err{background:var(--brick);}
+.sync-dot.loading{background:var(--brass-deep);animation:pulse 1s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+.sync-bar button{
+  margin-left:auto;
+  border:1px solid var(--line);
+  background:var(--card);
+  color:var(--brass-deep);
+  font-size:11px;
+  font-weight:600;
+  padding:5px 10px;
+  border-radius:14px;
+  cursor:pointer;
+  font-family:inherit;
+}
+
+.error-box{
+  margin:10px 0 0;
+  padding:12px 14px;
+  background:#F7E4DE;
+  color:var(--brick);
+  border-radius:8px;
+  font-size:12.5px;
+  line-height:1.5;
+}
+.error-box a{color:var(--brick);}
+.error-box button{
+  display:block;
+  margin-top:8px;
+  border:1px solid var(--brick);
+  background:#fff;
+  color:var(--brick);
+  font-size:12px;
+  padding:6px 12px;
+  border-radius:12px;
+  cursor:pointer;
+  font-family:inherit;
+}
+
+/* day card */
+.day-card{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:10px;
+  margin-top:14px;
+  overflow:hidden;
+}
+.day-head{
+  display:flex;
+  align-items:baseline;
+  gap:8px;
+  padding:10px 14px;
+  background:var(--ink);
+  color:var(--paper);
+}
+.day-head .dname{
+  font-weight:700;
+  font-size:15px;
+}
+.day-head .ddate{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:12px;
+  opacity:.75;
+}
+.day-head .dcount{
+  margin-left:auto;
+  font-family:'IBM Plex Mono',monospace;
+  font-size:11.5px;
+  opacity:.85;
+}
+
+.shift-row{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:10px 14px;
+  border-top:1px solid var(--line);
+}
+.shift-row .dot{
+  width:8px;height:8px;border-radius:50%;
+  flex:none;
+}
+.dot.morning{background:var(--teal);}
+.dot.midday{background:var(--brass);}
+.dot.evening{background:var(--brick);}
+
+.shift-row .nm{
+  font-weight:700;
+  font-size:14.5px;
+  flex:none;
+  width:64px;
+}
+.shift-row .time{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:13px;
+  color:var(--ink-soft);
+  margin-left:auto;
+}
+.empty-note{
+  padding:14px;
+  text-align:center;
+  color:var(--ink-soft);
+  font-size:12.5px;
+}
+
+footer{
+  margin-top:24px;
+  text-align:center;
+  font-size:11px;
+  color:var(--ink-soft);
+  font-family:'IBM Plex Mono',monospace;
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Fundamental</div>
+    <h1>本週班表</h1>
+    <div class="week-nav">
+      <button id="prevWeek" title="上一週">‹</button>
+      <div class="wlabel" id="weekLabel">讀取中…</div>
+      <button id="nextWeek" title="下一週">›</button>
+      <button id="todayBtn" class="todayBtn">本週</button>
+    </div>
+    <div class="sync-bar">
+      <span class="sync-dot" id="syncDot"></span>
+      <span id="syncText">連線中…</span>
+      <button id="refreshBtn">重新整理</button>
+    </div>
+  </header>
+
+  <div id="errorBox" class="error-box" style="display:none;"></div>
+  <div id="board"></div>
+  <footer id="footerNote"></footer>
+</div>
+
+<script>
+const SPREADSHEET_ID = '15hFGI2QqKJrGic60pGQOcEPUH3UDQnbpl6VnIcJchWA';
+const CSV_BASE = 'https://docs.google.com/spreadsheets/d/' + SPREADSHEET_ID + '/gviz/tq?tqx=out:csv';
+const AUTO_REFRESH_MS = 60000;
+
+const DAYS = ['週一','週二','週三','週四','週五','週六','週日'];
+
+let DATA = {};
+let DATES = [];
+
+/* ---- 週別：分頁名稱固定為 MMDD（該週週一）---- */
+function mondayOf(d){
+  const day = d.getDay();
+  const diff = (day === 0 ? -6 : 1 - day);
+  const m = new Date(d);
+  m.setDate(d.getDate() + diff);
+  m.setHours(0,0,0,0);
+  return m;
+}
+function fmtMD(d){
+  return String(d.getMonth()+1).padStart(2,'0') + '/' + String(d.getDate()).padStart(2,'0');
+}
+function sheetNameFor(monday){
+  return fmtMD(monday).replace('/', '');
+}
+function sundayOf(monday){
+  const s = new Date(monday);
+  s.setDate(monday.getDate()+6);
+  return s;
+}
+let currentMonday = mondayOf(new Date());
+
+/* ---- CSV 解析 ---- */
+function parseCSV(text){
+  const rows = [];
+  let row = [], cell = '', inQuotes = false;
+  for(let i=0;i<text.length;i++){
+    const c = text[i];
+    if(inQuotes){
+      if(c === '"'){
+        if(text[i+1] === '"'){ cell += '"'; i++; }
+        else inQuotes = false;
+      } else cell += c;
+    } else {
+      if(c === '"') inQuotes = true;
+      else if(c === ','){ row.push(cell); cell=''; }
+      else if(c === '\n'){ row.push(cell); rows.push(row); row=[]; cell=''; }
+      else if(c === '\r'){ /* skip */ }
+      else cell += c;
+    }
+  }
+  if(cell.length || row.length){ row.push(cell); rows.push(row); }
+  return rows;
+}
+
+function extractSchedule(rows){
+  const SHIFT_RE = /^\d+(\.\d+)?~\d+(\.\d+)?$/;
+  let headerRowIdx = -1, nameCol = -1;
+  for(let r=0;r<rows.length;r++){
+    for(let c=0;c<rows[r].length;c++){
+      if(rows[r][c] === '週一' && rows[r][c+6] === '週日' && rows[r][c-1] === '姓名'){
+        headerRowIdx = r; nameCol = c-1; break;
+      }
+    }
+    if(headerRowIdx>=0) break;
+  }
+  if(headerRowIdx<0) throw new Error('找不到班表欄位');
+
+  const dateRow = rows[headerRowIdx+1] || [];
+  const dates = [];
+  for(let k=0;k<7;k++) dates.push((dateRow[nameCol+1+k]||'').trim());
+
+  const data = {};
+  for(let r=headerRowIdx+2; r<rows.length; r++){
+    const name = (rows[r][nameCol]||'').trim();
+    if(!name || name==='總計') continue;
+    const shifts = [];
+    for(let k=0;k<7;k++){
+      const v = (rows[r][nameCol+1+k]||'').trim();
+      shifts.push(SHIFT_RE.test(v) ? v : null);
+    }
+    data[name] = shifts;
+  }
+  return {data, dates};
+}
+
+/* ---- 工具函式 ---- */
+function parseShift(t){
+  const [a,b] = t.split('~').map(Number);
+  return {start:a, end:b};
+}
+function fmtHM(h){
+  const hh = Math.floor(h);
+  const mm = Math.round((h-hh)*60);
+  return String(hh).padStart(2,'0')+':'+String(mm).padStart(2,'0');
+}
+function shiftClass(start,end){
+  if(end >= 20) return 'evening';
+  if(start < 12) return 'morning';
+  if(start < 17) return 'midday';
+  return 'evening';
+}
+
+/* ---- 讀取 Google 試算表 ---- */
+function updateWeekLabel(){
+  const monday = currentMonday, sunday = sundayOf(currentMonday);
+  document.getElementById('weekLabel').innerHTML =
+    `${sheetNameFor(monday)}<small>${fmtMD(monday)} – ${fmtMD(sunday)}</small>`;
+}
+
+async function loadData(){
+  updateWeekLabel();
+  setSync('loading','讀取中…');
+  document.getElementById('errorBox').style.display = 'none';
+  const sheetName = sheetNameFor(currentMonday);
+  const url = CSV_BASE + '&sheet=' + encodeURIComponent(sheetName) + '&_=' + Date.now();
+  try{
+    const res = await fetch(url);
+    const text = await res.text();
+    if(!res.ok || /^\s*</.test(text) || /Invalid query|does not exist|invalid_query/i.test(text)){
+      throw new Error('sheet-not-found: HTTP ' + res.status);
+    }
+    const {data, dates} = extractSchedule(parseCSV(text));
+    DATA = data; DATES = dates;
+    const now = new Date();
+    setSync('ok', '已同步 · ' + now.toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'}));
+    renderAll();
+  } catch(err){
+    setSync('err','讀取失敗');
+    const box = document.getElementById('errorBox');
+    box.innerHTML = `找不到「${sheetName}」這個分頁,或無法讀取。<br><br>
+      可點下方連結在瀏覽器直接查看 Google 回傳內容:<br>
+      <a href="${url}" target="_blank" style="word-break:break-all;">${url}</a>
+      <button id="retryBtn">重試</button>`;
+    box.style.display = 'block';
+    document.getElementById('retryBtn').onclick = loadData;
+    console.error(err);
+  }
+}
+function setSync(state,text){
+  document.getElementById('syncDot').className = 'sync-dot ' + state;
+  document.getElementById('syncText').textContent = text;
+}
+
+/* ---- 渲染 ---- */
+function renderBoard(){
+  const names = Object.keys(DATA);
+
+  let html = '';
+  DAYS.forEach((d,i)=>{
+    const entries = names
+      .map(n=>({n, t:DATA[n][i]}))
+      .filter(x=>x.t)
+      .map(x=>({...x, ...parseShift(x.t)}))
+      .sort((a,b)=>a.start-b.start);
+
+    html += `<div class="day-card">
+      <div class="day-head">
+        <span class="dname">${d}</span>
+        <span class="ddate">${DATES[i]||''}</span>
+        <span class="dcount">${entries.length} 人</span>
+      </div>
+      ${entries.length ? entries.map(e=>`
+        <div class="shift-row">
+          <span class="dot ${shiftClass(e.start,e.end)}"></span>
+          <span class="nm">${e.n}</span>
+          <span class="time">${fmtHM(e.start)}–${fmtHM(e.end)}</span>
+        </div>
+      `).join('') : `<div class="empty-note">本日無排班</div>`}
+    </div>`;
+  });
+
+  document.getElementById('board').innerHTML = html || '<div class="empty-note">本週試算表尚無排班資料</div>';
+}
+
+function renderFooter(){
+  document.getElementById('footerNote').textContent =
+    DATES.length ? `${DATES[0]} – ${DATES[6]}` : '';
+}
+
+function renderAll(){
+  renderBoard();
+  renderFooter();
+}
+
+document.getElementById('refreshBtn').onclick = loadData;
+document.getElementById('prevWeek').onclick = ()=>{ currentMonday.setDate(currentMonday.getDate()-7); loadData(); };
+document.getElementById('nextWeek').onclick = ()=>{ currentMonday.setDate(currentMonday.getDate()+7); loadData(); };
+document.getElementById('todayBtn').onclick = ()=>{ currentMonday = mondayOf(new Date()); loadData(); };
+
+loadData();
+setInterval(loadData, AUTO_REFRESH_MS);
+</script>
+</body>
+</html>
