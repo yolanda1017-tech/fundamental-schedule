@@ -147,6 +147,14 @@ h1{
   color:var(--brass-deep);
 }
 
+.week-label{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:14px;
+  font-weight:600;
+  color:var(--brass-deep);
+  margin-top:8px;
+}
+
 .sync-bar{
   display:flex;
   align-items:center;
@@ -211,19 +219,22 @@ h1{
 .day-head{
   display:flex;
   align-items:baseline;
-  gap:8px;
-  padding:10px 14px;
+  gap:10px;
+  padding:12px 14px;
   background:var(--ink);
   color:var(--paper);
 }
 .day-head .dname{
-  font-weight:700;
-  font-size:15px;
+  font-weight:500;
+  font-size:13px;
+  opacity:.8;
 }
 .day-head .ddate{
   font-family:'IBM Plex Mono',monospace;
-  font-size:12px;
-  opacity:.75;
+  font-size:19px;
+  font-weight:700;
+  letter-spacing:.02em;
+  opacity:1;
 }
 .day-head .dcount{
   margin-left:auto;
@@ -279,14 +290,8 @@ footer{
 <div class="wrap">
   <header>
     <div class="eyebrow">Fundamental</div>
-    <h1>本週班表</h1>
-    <div class="scope-toggle" id="scopeToggle"></div>
-    <div class="week-nav" id="weekNav">
-      <button id="prevBtn" title="上一個">‹</button>
-      <div class="wlabel" id="weekLabel">讀取中…</div>
-      <button id="nextBtn" title="下一個">›</button>
-      <button id="todayBtn" class="todayBtn">回到今天</button>
-    </div>
+    <h1>下週班表</h1>
+    <div class="week-label" id="weekLabel">讀取中…</div>
     <div class="sync-bar">
       <span class="sync-dot" id="syncDot"></span>
       <span id="syncText">連線中…</span>
@@ -306,11 +311,6 @@ const AUTO_REFRESH_MS = 60000;
 
 const WD_FULL = ['週一','週二','週三','週四','週五','週六','週日'];
 
-let scope = 'week'; // 'week' | 'month' | 'day'
-let currentMonday = mondayOf(new Date());
-let currentMonthAnchor = firstOfMonth(new Date());
-let weekCache = {}; // sheetName -> {data,dates} | null(找不到)
-
 /* ---- 日期工具 ---- */
 function mondayOf(d){
   const day = d.getDay();
@@ -321,8 +321,6 @@ function mondayOf(d){
   return m;
 }
 function addDays(d,n){ const r=new Date(d); r.setDate(r.getDate()+n); return r; }
-function firstOfMonth(d){ const r = new Date(d.getFullYear(), d.getMonth(), 1); r.setHours(0,0,0,0); return r; }
-function lastOfMonth(d){ const r = new Date(d.getFullYear(), d.getMonth()+1, 0); r.setHours(0,0,0,0); return r; }
 function fmtMD(d){
   return String(d.getMonth()+1).padStart(2,'0') + '/' + String(d.getDate()).padStart(2,'0');
 }
@@ -330,6 +328,9 @@ function sheetNameFor(monday){
   return fmtMD(monday).replace('/', '');
 }
 function sameDay(a,b){ return a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate(); }
+
+// 固定顯示「下週」：本週週一 + 7 天
+const nextMonday = addDays(mondayOf(new Date()), 7);
 
 /* ---- CSV 解析 ---- */
 function parseCSV(text){
@@ -402,42 +403,27 @@ function shiftClass(start,end){
   return 'evening';
 }
 
-/* ---- 讀取單一週分頁（含快取）---- */
+/* ---- 讀取下週分頁 ---- */
 async function fetchWeekSheet(monday){
   const name = sheetNameFor(monday);
-  if(Object.prototype.hasOwnProperty.call(weekCache, name)) return weekCache[name];
   const url = CSV_BASE + '&sheet=' + encodeURIComponent(name) + '&_=' + Date.now();
-  try{
-    const res = await fetch(url);
-    const text = await res.text();
-    if(!res.ok || /^\s*</.test(text) || /Invalid query|does not exist|invalid_query/i.test(text)){
-      weekCache[name] = null;
-      return null;
-    }
-    const parsed = extractSchedule(parseCSV(text));
-    weekCache[name] = parsed;
-    return parsed;
-  } catch(e){
-    weekCache[name] = null;
+  const res = await fetch(url);
+  const text = await res.text();
+  if(!res.ok || /^\s*</.test(text) || /Invalid query|does not exist|invalid_query/i.test(text)){
     return null;
   }
+  return extractSchedule(parseCSV(text));
 }
 
-/* ---- 組出某一段日期範圍（含）內，每天的上班名單 ---- */
+/* ---- 組出下週 7 天的上班名單 ---- */
 async function buildDayList(startDate, endDate){
-  const mondays = [];
-  let m = mondayOf(startDate);
-  while(m <= endDate){ mondays.push(new Date(m)); m = addDays(m,7); }
-  const weekResults = await Promise.all(mondays.map(fetchWeekSheet));
-
+  const wk = await fetchWeekSheet(startDate);
   const days = [];
   let cursor = new Date(startDate);
   while(cursor <= endDate){
-    const idx = mondays.findIndex(mo => mo <= cursor && cursor <= addDays(mo,6));
-    const wk = idx>=0 ? weekResults[idx] : null;
     let entries = [];
     if(wk){
-      const dayOffset = Math.round((cursor - mondays[idx]) / 86400000);
+      const dayOffset = Math.round((cursor - startDate) / 86400000);
       Object.keys(wk.data).forEach(name=>{
         const t = wk.data[name][dayOffset];
         if(t){ const {start,end}=parseShift(t); entries.push({name,start,end}); }
@@ -477,8 +463,8 @@ function renderDayCards(days){
   document.getElementById('board').innerHTML = html || '<div class="empty-note">沒有資料</div>';
 }
 
-function updateLabel(text, sub){
-  document.getElementById('weekLabel').innerHTML = sub ? `${text}<small>${sub}</small>` : text;
+function updateLabel(text){
+  document.getElementById('weekLabel').textContent = text;
 }
 function setSync(state,text){
   document.getElementById('syncDot').className = 'sync-dot ' + state;
@@ -495,20 +481,8 @@ async function loadAndRender(){
   setSync('loading','讀取中…');
   document.getElementById('errorBox').style.display = 'none';
   try{
-    let start, end;
-    if(scope === 'day'){
-      const today = new Date(); today.setHours(0,0,0,0);
-      start = end = today;
-      updateLabel('今天', fmtMD(today) + '（' + WD_FULL[(today.getDay()+6)%7] + '）');
-    } else if(scope === 'month'){
-      start = firstOfMonth(currentMonthAnchor);
-      end = lastOfMonth(currentMonthAnchor);
-      updateLabel(`${currentMonthAnchor.getFullYear()} 年 ${currentMonthAnchor.getMonth()+1} 月`, `${fmtMD(start)} – ${fmtMD(end)}`);
-    } else {
-      start = currentMonday;
-      end = addDays(currentMonday,6);
-      updateLabel(sheetNameFor(currentMonday), `${fmtMD(start)} – ${fmtMD(end)}`);
-    }
+    const start = nextMonday, end = addDays(nextMonday,6);
+    updateLabel(`${sheetNameFor(nextMonday)} · ${fmtMD(start)} – ${fmtMD(end)}`);
     const days = await buildDayList(start, end);
     renderDayCards(days);
     setSync('ok', '已同步 · ' + new Date().toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'}));
@@ -519,45 +493,10 @@ async function loadAndRender(){
   }
 }
 
-/* ---- 事件綁定 ---- */
-function renderScopeToggle(){
-  const el = document.getElementById('scopeToggle');
-  el.innerHTML = '';
-  [['week','本週'],['month','當月'],['day','當天']].forEach(([key,label])=>{
-    const b = document.createElement('button');
-    b.textContent = label;
-    if(key===scope) b.classList.add('active');
-    b.onclick = ()=>{
-      scope = key;
-      renderScopeToggle();
-      document.getElementById('weekNav').style.display = (scope==='day') ? 'none' : 'flex';
-      weekCache = {}; // 換範圍時清一次快取，確保拿到最新資料
-      loadAndRender();
-    };
-    el.appendChild(b);
-  });
-}
+document.getElementById('refreshBtn').onclick = loadAndRender;
 
-document.getElementById('refreshBtn').onclick = ()=>{ weekCache = {}; loadAndRender(); };
-document.getElementById('prevBtn').onclick = ()=>{
-  if(scope==='month'){ currentMonthAnchor.setMonth(currentMonthAnchor.getMonth()-1); }
-  else { currentMonday = addDays(currentMonday,-7); }
-  loadAndRender();
-};
-document.getElementById('nextBtn').onclick = ()=>{
-  if(scope==='month'){ currentMonthAnchor.setMonth(currentMonthAnchor.getMonth()+1); }
-  else { currentMonday = addDays(currentMonday,7); }
-  loadAndRender();
-};
-document.getElementById('todayBtn').onclick = ()=>{
-  currentMonday = mondayOf(new Date());
-  currentMonthAnchor = firstOfMonth(new Date());
-  loadAndRender();
-};
-
-renderScopeToggle();
 loadAndRender();
-setInterval(()=>{ weekCache = {}; loadAndRender(); }, AUTO_REFRESH_MS);
+setInterval(loadAndRender, AUTO_REFRESH_MS);
 </script>
 </body>
 </html>
