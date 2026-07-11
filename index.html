@@ -121,6 +121,88 @@ h1{
 }
 .view-toggle button.active{background:var(--text);color:#fff;}
 
+/* ---- month calendar grid (Google Calendar 風格) ---- */
+.month-wrap{
+  background:var(--bg);
+  margin-top:10px;
+  padding:12px 12px 4px;
+}
+.month-head-row{
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  margin-bottom:6px;
+}
+.month-head-row span{
+  text-align:center;
+  font-size:11px;
+  color:var(--text2);
+  font-weight:500;
+  padding-bottom:6px;
+}
+.month-grid{
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  gap:3px;
+}
+.month-cell{
+  min-height:64px;
+  border-radius:8px;
+  padding:5px 4px;
+  background:var(--surface);
+  cursor:pointer;
+  display:flex;
+  flex-direction:column;
+  gap:3px;
+  border:1.5px solid transparent;
+}
+.month-cell.pad{opacity:.35;}
+.month-cell.today .mnum{
+  background:var(--blue);
+  color:#fff;
+}
+.month-cell.selected{border-color:var(--blue);background:var(--blue-tint);}
+.month-cell .mnum{
+  width:20px;height:20px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:11.5px;
+  font-weight:600;
+  color:var(--text);
+}
+.month-dots{
+  display:flex;
+  flex-wrap:wrap;
+  gap:2px;
+}
+.month-dot{
+  width:6px;height:6px;
+  border-radius:50%;
+  flex:none;
+}
+.month-dot.morning{background:var(--morning);}
+.month-dot.midday{background:var(--midday);}
+.month-dot.evening{background:var(--evening);}
+.month-more{
+  font-size:9px;
+  color:var(--text2);
+}
+.month-detail{
+  margin-top:12px;
+  padding:14px 16px 16px;
+  background:var(--surface);
+  border-radius:10px;
+}
+.month-detail .dtitle{
+  display:flex;
+  align-items:baseline;
+  gap:8px;
+  margin-bottom:10px;
+}
+.month-detail .dtitle .dname{font-size:15px;font-weight:700;color:var(--text);}
+.month-detail .dtitle .ddate{font-size:13px;color:var(--text2);}
+
 /* ---- day view ---- */
 .day-card{
   background:var(--bg);
@@ -644,19 +726,19 @@ async function loadAndRender(){
       await loadWeekOnly();
       renderToggle();
       if(currentView==='day'){ renderBoardByDay(); } else { renderBoardByPerson(); }
-    } else {
-      let start, end;
-      if(scope === 'day'){
-        const today = new Date(); today.setHours(0,0,0,0);
-        start = end = today;
-        updateLabel('今天', fmtMD(today));
-      } else { // month
-        start = firstOfMonth(currentMonthAnchor);
-        end = lastOfMonth(currentMonthAnchor);
-        updateLabel(`${currentMonthAnchor.getFullYear()} 年 ${currentMonthAnchor.getMonth()+1} 月`, `${fmtMD(start)} – ${fmtMD(end)}`);
-      }
-      const days = await buildDayList(start, end);
+    } else if(scope === 'day'){
+      const today = new Date(); today.setHours(0,0,0,0);
+      updateLabel('今天', fmtMD(today));
+      const days = await buildDayList(today, today);
       renderDayCardsGeneric(days);
+    } else { // month
+      const monthStart = firstOfMonth(currentMonthAnchor);
+      const monthEnd = lastOfMonth(currentMonthAnchor);
+      const gridStart = mondayOf(monthStart);
+      const gridEnd = addDays(mondayOf(monthEnd), 6);
+      updateLabel(`${currentMonthAnchor.getFullYear()} 年 ${currentMonthAnchor.getMonth()+1} 月`, `${fmtMD(monthStart)} – ${fmtMD(monthEnd)}`);
+      const days = await buildDayList(gridStart, gridEnd);
+      renderMonthCalendar(days, currentMonthAnchor);
     }
     setSync('ok', '已同步 · ' + new Date().toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'}));
   } catch(err){
@@ -776,6 +858,77 @@ function renderDayCardsGeneric(days){
     </div>`;
   });
   document.getElementById('board').innerHTML = html || '<div class="day-empty" style="padding:20px 16px;">沒有資料</div>';
+}
+
+/* ---- 當月：Google 行事曆風格的月曆格線 ---- */
+let monthDaysCache = [];
+let selectedMonthDate = null;
+
+function renderMonthCalendar(days, monthAnchor){
+  monthDaysCache = days;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const targetMonth = monthAnchor.getMonth();
+
+  // 預設選取今天（若今天在此月內），否則選第一天
+  const todayInGrid = days.find(d=>sameDay(d.date, today));
+  selectedMonthDate = todayInGrid ? today : days[0].date;
+
+  let html = `<div class="month-wrap">
+    <div class="month-head-row">${DAYS.map(w=>`<span>${w}</span>`).join('')}</div>
+    <div class="month-grid">`;
+
+  days.forEach(d=>{
+    const isPad = d.date.getMonth() !== targetMonth;
+    const isToday = sameDay(d.date, today);
+    const isSelected = sameDay(d.date, selectedMonthDate);
+    const dots = d.entries.slice(0,4).map(e=>`<span class="month-dot ${shiftClass(e.start,e.end)}"></span>`).join('');
+    const more = d.entries.length > 4 ? `<span class="month-more">+${d.entries.length-4}</span>` : '';
+    html += `<div class="month-cell${isPad?' pad':''}${isToday?' today':''}${isSelected?' selected':''}" data-date="${d.date.toISOString()}">
+      <span class="mnum">${d.date.getDate()}</span>
+      <div class="month-dots">${dots}${more}</div>
+    </div>`;
+  });
+
+  html += `</div></div><div id="monthDetail"></div>`;
+  document.getElementById('board').innerHTML = html;
+
+  document.querySelectorAll('.month-cell').forEach(cell=>{
+    cell.onclick = ()=>{
+      selectedMonthDate = new Date(cell.getAttribute('data-date'));
+      document.querySelectorAll('.month-cell').forEach(c=>c.classList.remove('selected'));
+      cell.classList.add('selected');
+      renderMonthDetail();
+    };
+  });
+  renderMonthDetail();
+}
+
+function renderMonthDetail(){
+  const d = monthDaysCache.find(x=>sameDay(x.date, selectedMonthDate));
+  if(!d) return;
+  const wd = WEEKDAYS[(d.date.getDay()+6)%7];
+  const today = new Date(); today.setHours(0,0,0,0);
+  const isToday = sameDay(d.date, today);
+  const html = `<div class="month-detail">
+    <div class="dtitle">
+      <span class="dname">${wd}</span>
+      <span class="ddate">${fmtMD(d.date)}${isToday?'・今天':''}</span>
+      <span class="dcount" style="margin-left:auto;font-size:12.5px;color:var(--text2);">${d.entries.length} 人</span>
+    </div>
+    <div class="staff-list">
+      ${d.noSheet
+        ? `<div class="day-empty">此週尚未建立班表</div>`
+        : (d.entries.length ? d.entries.map(e=>{
+            const cls = shiftClass(e.start, e.end);
+            return `<div class="staff-row ${cls}">
+              <span class="snm">${e.name}</span>
+              <span class="slabel">${shiftLabel(e.start, e.end)}</span>
+              <span class="stime">${fmtHM(e.start)} – ${fmtHM(e.end)}</span>
+            </div>`;
+          }).join('') : `<div class="day-empty">本日無排班</div>`)}
+    </div>
+  </div>`;
+  document.getElementById('monthDetail').innerHTML = html;
 }
 
 function renderFooter(){
