@@ -665,6 +665,9 @@ async function buildDayList(startDate, endDate){
   }
   return days;
 }
+
+/* ---------------- 工具函式 ---------------- */
+function parseShift(t){
   const [a,b] = t.split('~').map(Number);
   return {start:a, end:b};
 }
