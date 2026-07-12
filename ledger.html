@@ -155,6 +155,96 @@ h1{
   margin-top:8px;
 }
 
+/* ---- 依姓名檢視 ---- */
+.person{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:10px;
+  margin-top:14px;
+  overflow:hidden;
+  padding-bottom:12px;
+}
+.person-title{
+  display:flex;
+  align-items:baseline;
+  flex-wrap:wrap;
+  row-gap:2px;
+  gap:8px;
+  padding:12px 14px 10px;
+}
+.person-title .nm{
+  font-weight:700;
+  font-size:15px;
+  color:var(--ink);
+}
+.person-title .hrs{
+  margin-left:auto;
+  font-size:11px;
+  color:var(--ink-soft);
+  font-family:'IBM Plex Mono',monospace;
+  white-space:nowrap;
+}
+.week-strip{
+  padding:0 12px;
+}
+.dh-row, .cell-row{
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  gap:5px;
+}
+.dh{
+  text-align:center;
+  padding-bottom:6px;
+}
+.dh .wd{
+  display:block;
+  font-size:10px;
+  color:var(--ink-soft);
+}
+.dh .dn{
+  display:block;
+  font-size:12.5px;
+  font-weight:700;
+  color:var(--ink);
+  font-family:'IBM Plex Mono',monospace;
+  margin-top:1px;
+}
+.timecell{
+  position:relative;
+  min-height:58px;
+  background:var(--paper);
+  border-radius:6px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.timecell.morning{background:#E9F1EC;}
+.timecell.midday{background:#F5EBDC;}
+.timecell.evening{background:#F3E3DE;}
+.celltime{
+  text-align:center;
+  line-height:1.3;
+  font-size:11px;
+  font-weight:600;
+  color:var(--ink);
+  font-family:'IBM Plex Mono',monospace;
+}
+.celltime b{
+  display:block;
+  font-size:9px;
+  font-weight:700;
+  margin-bottom:2px;
+  font-family:'Noto Sans TC','Noto Sans',sans-serif;
+}
+.celltime.morning b{color:var(--teal);}
+.celltime.midday b{color:var(--brass-deep);}
+.celltime.evening b{color:var(--brick);}
+.off-x{
+  font-size:11px;
+  color:var(--ink-soft);
+  opacity:.5;
+}
+
 .sync-bar{
   display:flex;
   align-items:center;
@@ -290,7 +380,9 @@ footer{
 <div class="wrap">
   <header>
     <div class="eyebrow">Fundamental</div>
-    <h1>下週班表</h1>
+    <h1 id="pageTitle">下週班表</h1>
+    <div class="week-toggle" id="weekToggle"></div>
+    <div class="scope-toggle" id="viewToggle"></div>
     <div class="week-label" id="weekLabel">讀取中…</div>
     <div class="sync-bar">
       <span class="sync-dot" id="syncDot"></span>
@@ -310,6 +402,11 @@ const CSV_BASE = 'https://docs.google.com/spreadsheets/d/' + SPREADSHEET_ID + '/
 const AUTO_REFRESH_MS = 60000;
 
 const WD_FULL = ['週一','週二','週三','週四','週五','週六','週日'];
+const DAYS = ['一','二','三','四','五','六','日'];
+
+/* ---- 狀態 ---- */
+let weekChoice = 'next'; // 'current' | 'next'
+let currentView = 'day'; // 'day' | 'person'
 
 /* ---- 日期工具 ---- */
 function mondayOf(d){
@@ -329,8 +426,9 @@ function sheetNameFor(monday){
 }
 function sameDay(a,b){ return a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate(); }
 
-// 固定顯示「下週」：本週週一 + 7 天
-const nextMonday = addDays(mondayOf(new Date()), 7);
+function targetMonday(){
+  return weekChoice === 'current' ? mondayOf(new Date()) : addDays(mondayOf(new Date()), 7);
+}
 
 /* ---- CSV 解析 ---- */
 function parseCSV(text){
@@ -402,6 +500,12 @@ function shiftClass(start,end){
   if(start < 17) return 'midday';
   return 'evening';
 }
+function shiftLabel(start,end){
+  if(end >= 20) return '晚班';
+  if(start < 12) return '早班';
+  if(start < 17) return '午班';
+  return '晚班';
+}
 
 /* ---- 讀取下週分頁 ---- */
 async function fetchWeekSheet(monday){
@@ -463,6 +567,52 @@ function renderDayCards(days){
   document.getElementById('board').innerHTML = html || '<div class="empty-note">沒有資料</div>';
 }
 
+/* ---- 依姓名檢視 ---- */
+function renderPersonStrip(days){
+  const personMap = {};
+  days.forEach((d,i)=>{
+    d.entries.forEach(e=>{
+      if(!personMap[e.name]) personMap[e.name] = new Array(7).fill(null);
+      personMap[e.name][i] = {start:e.start, end:e.end};
+    });
+  });
+  const names = Object.keys(personMap).sort((a,b)=>{
+    const hrsOf = arr => arr.reduce((s,x)=> s + (x? x.end-x.start : 0), 0);
+    return hrsOf(personMap[b]) - hrsOf(personMap[a]);
+  });
+
+  let html = '';
+  names.forEach(name=>{
+    const shifts = personMap[name];
+    const hrs = shifts.reduce((s,x)=> s + (x? x.end-x.start : 0), 0);
+    const workDays = shifts.filter(Boolean).length;
+    const offDays = shifts.length - workDays;
+
+    html += `<div class="person">
+      <div class="person-title">
+        <span class="nm">${name}</span>
+        <span class="hrs">上班 ${workDays} 天・休假 ${offDays} 天・共 ${hrs.toFixed(1)} 小時</span>
+      </div>
+      <div class="week-strip">
+        <div class="dh-row">
+          ${days.map(d=>`<div class="dh"><span class="wd">${DAYS[(d.date.getDay()+6)%7]}</span><span class="dn">${fmtMD(d.date)}</span></div>`).join('')}
+        </div>
+        <div class="cell-row">
+          ${shifts.map(s=>{
+            if(!s){ return `<div class="timecell"><span class="off-x">休</span></div>`; }
+            const cls = shiftClass(s.start,s.end);
+            return `<div class="timecell ${cls}">
+              <div class="celltime ${cls}"><b>${shiftLabel(s.start,s.end)}</b>${fmtHM(s.start)}<br>${fmtHM(s.end)}</div>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>
+    </div>`;
+  });
+
+  document.getElementById('board').innerHTML = html || '<div class="empty-note">這週試算表尚無排班資料</div>';
+}
+
 function updateLabel(text){
   document.getElementById('weekLabel').textContent = text;
 }
@@ -481,10 +631,12 @@ async function loadAndRender(){
   setSync('loading','讀取中…');
   document.getElementById('errorBox').style.display = 'none';
   try{
-    const start = nextMonday, end = addDays(nextMonday,6);
-    updateLabel(`${sheetNameFor(nextMonday)} · ${fmtMD(start)} – ${fmtMD(end)}`);
+    const monday = targetMonday();
+    const start = monday, end = addDays(monday,6);
+    document.getElementById('pageTitle').textContent = weekChoice==='current' ? '本週班表' : '下週班表';
+    updateLabel(`${sheetNameFor(monday)} · ${fmtMD(start)} – ${fmtMD(end)}`);
     const days = await buildDayList(start, end);
-    renderDayCards(days);
+    if(currentView === 'person'){ renderPersonStrip(days); } else { renderDayCards(days); }
     setSync('ok', '已同步 · ' + new Date().toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'}));
   } catch(err){
     setSync('err','讀取失敗');
@@ -493,8 +645,33 @@ async function loadAndRender(){
   }
 }
 
+function renderWeekToggle(){
+  const el = document.getElementById('weekToggle');
+  el.innerHTML = '';
+  [['current','當週'],['next','下週']].forEach(([key,label])=>{
+    const b = document.createElement('button');
+    b.textContent = label;
+    if(key===weekChoice) b.classList.add('active');
+    b.onclick = ()=>{ weekChoice = key; renderWeekToggle(); loadAndRender(); };
+    el.appendChild(b);
+  });
+}
+function renderViewToggle(){
+  const el = document.getElementById('viewToggle');
+  el.innerHTML = '';
+  [['day','依星期'],['person','依姓名']].forEach(([key,label])=>{
+    const b = document.createElement('button');
+    b.textContent = label;
+    if(key===currentView) b.classList.add('active');
+    b.onclick = ()=>{ currentView = key; renderViewToggle(); loadAndRender(); };
+    el.appendChild(b);
+  });
+}
+
 document.getElementById('refreshBtn').onclick = loadAndRender;
 
+renderWeekToggle();
+renderViewToggle();
 loadAndRender();
 setInterval(loadAndRender, AUTO_REFRESH_MS);
 </script>
