@@ -269,6 +269,8 @@ h1{
 .person-title{
   display:flex;
   align-items:baseline;
+  flex-wrap:wrap;
+  row-gap:2px;
   gap:8px;
   padding:14px 16px 10px;
 }
@@ -279,8 +281,9 @@ h1{
 }
 .person-title .hrs{
   margin-left:auto;
-  font-size:12.5px;
+  font-size:12px;
   color:var(--text2);
+  white-space:nowrap;
 }
 
 .week-strip{
@@ -792,6 +795,8 @@ function renderPersonStrip(days){
   names.forEach(name=>{
     const shifts = personMap[name];
     const hrs = shifts.reduce((s,x)=> s + (x? x.end-x.start : 0), 0);
+    const workDays = shifts.filter(Boolean).length;
+    const offDays = shifts.length - workDays;
 
     const inner = `
         <div class="dh-row" style="${colStyle}">
@@ -812,7 +817,7 @@ function renderPersonStrip(days){
     html += `<div class="person">
       <div class="person-title">
         <span class="nm">${name}</span>
-        <span class="hrs">共 ${hrs.toFixed(1)} 小時</span>
+        <span class="hrs">上班 ${workDays} 天・休假 ${offDays} 天・共 ${hrs.toFixed(1)} 小時</span>
       </div>
       ${cellPx ? `<div class="week-strip-scroll">${inner}</div>` : `<div class="week-strip">${inner}</div>`}
     </div>`;
