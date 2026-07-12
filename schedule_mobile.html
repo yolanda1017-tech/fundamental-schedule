@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fundamental 班表</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+
+:root{
+  --bg:#FFFFFF;
+  --surface:#F8F9FA;
+  --border:#E3E3E3;
+  --text:#3C4043;
+  --text2:#70757A;
+  --blue:#1A73E8;
+  --blue-tint:#E8F0FE;
+
+  --morning:#0B8043;   /* Basil  - 早班 */
+  --midday:#F4511E;    /* Tangerine - 午班 */
+  --evening:#8E24AA;   /* Grape  - 晚班 */
+}
+
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--surface);
+  color:var(--text);
+  font-family:'Roboto','Noto Sans TC',sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+
+.wrap{
+  max-width:480px;
+  margin:0 auto;
+  padding:0 0 40px;
+}
+
+/* ---- top bar ---- */
+header{
+  position:sticky;
+  top:0;
+  z-index:10;
+  background:var(--bg);
+  border-bottom:1px solid var(--border);
+  padding:14px 16px 10px;
+}
+.eyebrow{
+  font-size:11px;
+  font-weight:700;
+  letter-spacing:.14em;
+  color:var(--blue);
+  text-transform:uppercase;
+  margin-bottom:2px;
+}
+h1{
+  font-size:18px;
+  font-weight:500;
+  margin:0 0 12px;
+  color:var(--text);
+}
+.week-toggle{
+  display:flex;
+  background:var(--surface);
+  border-radius:20px;
+  padding:3px;
+  font-size:13px;
+}
+.week-toggle button{
+  flex:1;
+  border:none;
+  background:transparent;
+  color:var(--text2);
+  padding:8px 6px;
+  border-radius:16px;
+  cursor:pointer;
+  font-family:inherit;
+  font-size:inherit;
+  font-weight:500;
+  transition:background .15s,color .15s;
+}
+.week-toggle button.active{background:var(--blue);color:#fff;}
+
+.legend{
+  display:flex;
+  gap:16px;
+  margin-top:12px;
+  font-size:12px;
+  color:var(--text2);
+}
+.legend i{
+  display:inline-block;
+  width:9px;height:9px;border-radius:2px;
+  margin-right:5px;
+  vertical-align:1px;
+}
+.legend i.morning{background:var(--morning);}
+.legend i.midday{background:var(--midday);}
+.legend i.evening{background:var(--evening);}
+
+.view-toggle{
+  display:flex;
+  background:var(--surface);
+  border-radius:20px;
+  padding:3px;
+  font-size:12.5px;
+  margin-top:6px;
+}
+.view-toggle button{
+  flex:1;
+  border:none;
+  background:transparent;
+  color:var(--text2);
+  padding:7px 6px;
+  border-radius:16px;
+  cursor:pointer;
+  font-family:inherit;
+  font-size:inherit;
+  font-weight:500;
+  transition:background .15s,color .15s;
+}
+.view-toggle button.active{background:var(--text);color:#fff;}
+
+/* ---- month calendar grid (Google Calendar 風格：格內直接顯示班表) ---- */
+.month-wrap{
+  background:var(--bg);
+  margin-top:10px;
+  padding:12px 8px 4px;
+}
+.month-head-row{
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  margin-bottom:6px;
+}
+.month-head-row span{
+  text-align:center;
+  font-size:10.5px;
+  color:var(--text2);
+  font-weight:500;
+  padding-bottom:6px;
+}
+.month-grid{
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  gap:2px;
+}
+.month-cell{
+  min-height:56px;
+  border-radius:6px;
+  padding:3px 2px 4px;
+  background:var(--surface);
+  display:flex;
+  flex-direction:column;
+  border:1.5px solid transparent;
+}
+.month-cell.pad{opacity:.32;}
+.month-cell.today{border-color:var(--blue);}
+.month-cell .mnum{
+  font-size:10px;
+  font-weight:700;
+  color:var(--text2);
+  padding:0 2px;
+  margin-bottom:2px;
+}
+.month-cell.today .mnum{color:var(--blue);}
+.month-entries{
+  display:flex;
+  flex-direction:column;
+  gap:1.5px;
+}
+.month-entry{
+  border-radius:3px;
+  padding:1px 3px;
+  line-height:1.2;
+}
+.month-entry.morning{background:#E6F4EA;}
+.month-entry.midday{background:#FCE8E6;}
+.month-entry.evening{background:#F3E8FD;}
+.month-entry .n{
+  display:block;
+  font-size:8.6px;
+  font-weight:700;
+  color:var(--text);
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.month-entry .t{
+  display:block;
+  font-size:7.6px;
+  color:var(--text2);
+  white-space:nowrap;
+}
+.month-entry.morning .t{color:var(--morning);}
+.month-entry.midday .t{color:var(--midday);}
+.month-entry.evening .t{color:var(--evening);}
+
+/* ---- day view ---- */
+.day-card{
+  background:var(--bg);
+  margin-top:10px;
+  padding:14px 16px 16px;
+}
+.day-card .dtitle{
+  display:flex;
+  align-items:baseline;
+  gap:8px;
+  margin-bottom:10px;
+}
+.day-card .dtitle .dname{
+  font-size:16px;
+  font-weight:700;
+  color:var(--text);
+}
+.day-card .dtitle .ddate{
+  font-size:13px;
+  color:var(--text2);
+}
+.day-card .dtitle .dcount{
+  margin-left:auto;
+  font-size:12.5px;
+  color:var(--text2);
+}
+.staff-list{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+.staff-row{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:11px 14px;
+  border-radius:8px;
+}
+.staff-row.morning{background:#E6F4EA;}
+.staff-row.midday{background:#FCE8E6;}
+.staff-row.evening{background:#F3E8FD;}
+.staff-row .snm{
+  font-size:14.5px;
+  font-weight:700;
+  color:var(--text);
+  width:56px;
+  flex:none;
+}
+.staff-row .stime{
+  font-size:13.5px;
+  font-weight:500;
+  color:var(--text);
+  margin-left:auto;
+}
+.staff-row .slabel{
+  font-size:11px;
+  font-weight:700;
+}
+.staff-row.morning .slabel{color:var(--morning);}
+.staff-row.midday .slabel{color:var(--midday);}
+.staff-row.evening .slabel{color:var(--evening);}
+.day-empty{
+  font-size:13px;
+  color:var(--text2);
+  padding:8px 2px;
+}
+.person{
+  background:var(--bg);
+  margin-top:10px;
+  padding-bottom:6px;
+}
+.person-title{
+  display:flex;
+  align-items:baseline;
+  gap:8px;
+  padding:14px 16px 10px;
+}
+.person-title .nm{
+  font-size:16px;
+  font-weight:700;
+  color:var(--text);
+}
+.person-title .hrs{
+  margin-left:auto;
+  font-size:12.5px;
+  color:var(--text2);
+}
+
+.week-strip{
+  padding:0 12px 14px;
+}
+.week-strip-scroll{
+  overflow-x:auto;
+  -webkit-overflow-scrolling:touch;
+  padding:0 12px 14px;
+}
+.week-strip-scroll .dh-row, .week-strip-scroll .cell-row{
+  gap:4px;
+}
+.dh-row, .cell-row{
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  gap:5px;
+}
+.dh{
+  text-align:center;
+  padding-bottom:7px;
+}
+.dh .wd{
+  display:block;
+  font-size:11px;
+  color:var(--text2);
+  text-transform:uppercase;
+}
+.dh .dn{
+  display:block;
+  font-size:14px;
+  font-weight:500;
+  color:var(--text);
+  margin-top:2px;
+}
+
+.timecell{
+  position:relative;
+  min-height:64px;
+  background:var(--surface);
+  border-radius:8px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.timecell.morning{background:#E6F4EA;}
+.timecell.midday{background:#FCE8E6;}
+.timecell.evening{background:#F3E8FD;}
+
+.celltime{
+  text-align:center;
+  line-height:1.35;
+  font-size:12.5px;
+  font-weight:500;
+  color:var(--text);
+}
+.celltime b{
+  display:block;
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:.02em;
+  margin-bottom:2px;
+}
+.celltime.morning b{color:var(--morning);}
+.celltime.midday b{color:var(--midday);}
+.celltime.evening b{color:var(--evening);}
+
+.off-x{
+  font-size:13px;
+  color:var(--text2);
+  opacity:.45;
+}
+
+.sync-bar{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-size:12px;
+  color:var(--text2);
+  margin-top:6px;
+  margin-bottom:6px;
+}
+.sync-dot{
+  width:7px;height:7px;border-radius:50%;
+  background:#9AA0A6;
+  flex:none;
+}
+.sync-dot.ok{background:var(--morning);}
+.sync-dot.err{background:#D93025;}
+.sync-dot.loading{background:var(--blue);animation:pulse 1s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+.sync-bar button{
+  margin-left:auto;
+  border:1px solid var(--border);
+  background:var(--bg);
+  color:var(--blue);
+  font-size:11.5px;
+  font-weight:500;
+  padding:5px 10px;
+  border-radius:14px;
+  cursor:pointer;
+  font-family:inherit;
+}
+.sync-bar button:active{background:var(--blue-tint);}
+
+.error-box{
+  margin:10px 16px 0;
+  padding:12px 14px;
+  background:#FCE8E6;
+  color:#B3261E;
+  border-radius:8px;
+  font-size:12.5px;
+  line-height:1.5;
+}
+.error-box button{
+  display:block;
+  margin-top:8px;
+  border:1px solid #B3261E;
+  background:#fff;
+  color:#B3261E;
+  font-size:12px;
+  padding:6px 12px;
+  border-radius:12px;
+  cursor:pointer;
+  font-family:inherit;
+}
+
+.scope-toggle{
+  display:flex;
+  background:var(--surface);
+  border-radius:20px;
+  padding:3px;
+  font-size:12.5px;
+  margin-top:6px;
+}
+.scope-toggle button{
+  flex:1;
+  border:none;
+  background:transparent;
+  color:var(--text2);
+  padding:7px 6px;
+  border-radius:16px;
+  cursor:pointer;
+  font-family:inherit;
+  font-size:inherit;
+  font-weight:500;
+  transition:background .15s,color .15s;
+}
+.scope-toggle button.active{background:var(--blue);color:#fff;}
+
+.week-nav{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-top:4px;
+  margin-bottom:8px;
+}
+.week-nav button{
+  width:44px;height:44px;
+  flex:none;
+  border:1px solid var(--border);
+  background:var(--bg);
+  color:var(--text);
+  border-radius:50%;
+  font-size:22px;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-family:inherit;
+}
+.week-nav button:active{background:var(--surface);}
+.week-nav .wlabel{
+  flex:1;
+  text-align:center;
+  font-size:17px;
+  font-weight:700;
+  color:var(--text);
+}
+.week-nav .wlabel small{
+  display:block;
+  font-size:12px;
+  font-weight:400;
+  color:var(--text2);
+  margin-top:2px;
+}
+.week-nav .todayBtn{
+  width:auto;
+  height:36px;
+  border-radius:14px;
+  padding:0 12px;
+  font-size:12px;
+  color:var(--blue);
+  border-color:var(--border);
+}
+
+footer{
+  margin:18px 16px 0;
+  font-size:11px;
+  color:var(--text2);
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Fundamental</div>
+    <h1>外場班表</h1>
+    <div class="scope-toggle" id="scopeToggle"></div>
+    <div class="week-nav" id="weekNav">
+      <button id="prevBtn" title="上一個">‹</button>
+      <div class="wlabel" id="weekLabel">讀取中…</div>
+      <button id="nextBtn" title="下一個">›</button>
+      <button id="todayBtn" class="todayBtn">回到現在</button>
+    </div>
+    <div class="sync-bar">
+      <span class="sync-dot" id="syncDot"></span>
+      <span id="syncText">連線中…</span>
+      <button id="refreshBtn" title="重新整理">重新整理</button>
+    </div>
+    <div class="view-toggle" id="viewToggle"></div>
+    <div class="legend">
+      <span><i class="morning"></i>早班</span>
+      <span><i class="midday"></i>午班</span>
+      <span><i class="evening"></i>晚班</span>
+    </div>
+  </header>
+
+  <div id="errorBox" class="error-box" style="display:none;">
+    無法讀取 Google 試算表資料。請確認該試算表的共用設定為「知道連結的任何人」皆可檢視(至少「檢視者」權限),否則瀏覽器無法跨網域讀取。
+    <button id="retryBtn">重試</button>
+  </div>
+  <div id="board"></div>
+  <footer id="footerNote"></footer>
+</div>
+
+<script>
+const SPREADSHEET_ID = '15hFGI2QqKJrGic60pGQOcEPUH3UDQnbpl6VnIcJchWA';
+const CSV_BASE = 'https://docs.google.com/spreadsheets/d/' + SPREADSHEET_ID + '/gviz/tq?tqx=out:csv';
+const AUTO_REFRESH_MS = 60000; // 每 60 秒自動重新讀取一次
+
+const WEEKDAYS = ['週一','週二','週三','週四','週五','週六','週日'];
+const DAYS = ['一','二','三','四','五','六','日'];
+
+let currentView = 'person'; // 'person' | 'day'
+let scope = 'week';         // 'week' | 'month' | 'day'
+let weekCache = {};         // sheetName -> {data,dates} | null
+
+/* ---------------- 週別（分頁名稱：班表(MM/DD)，MM/DD 為該週週一）---------------- */
+function mondayOf(d){
+  const day = d.getDay(); // 0=週日 ... 6=週六
+  const diff = (day === 0 ? -6 : 1 - day);
+  const m = new Date(d);
+  m.setDate(d.getDate() + diff);
+  m.setHours(0,0,0,0);
+  return m;
+}
+function fmtMD(d){
+  return String(d.getMonth()+1).padStart(2,'0') + '/' + String(d.getDate()).padStart(2,'0');
+}
+function sheetNameFor(monday){
+  return fmtMD(monday).replace('/', '');
+}
+function fullyEncode(str){
+  // encodeURIComponent 預設不會跳脫 ( ) ! ' *，這裡強制全部跳脫，
+  // 避免 Google gviz 端點對括號/斜線的解析出現落差（純數字分頁名稱通常用不到，但保留以防萬一）
+  return encodeURIComponent(str).replace(/[!'()*]/g, c => '%' + c.charCodeAt(0).toString(16).toUpperCase());
+}
+function sundayOf(monday){
+  const s = new Date(monday);
+  s.setDate(monday.getDate()+6);
+  return s;
+}
+function addDays(d,n){ const r=new Date(d); r.setDate(r.getDate()+n); return r; }
+function firstOfMonth(d){ const r=new Date(d.getFullYear(), d.getMonth(), 1); r.setHours(0,0,0,0); return r; }
+function lastOfMonth(d){ const r=new Date(d.getFullYear(), d.getMonth()+1, 0); r.setHours(0,0,0,0); return r; }
+function sameDay(a,b){ return a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate(); }
+
+let currentMonday = mondayOf(new Date());
+let currentMonthAnchor = firstOfMonth(new Date());
+let currentDay = (function(){ const d=new Date(); d.setHours(0,0,0,0); return d; })();
+
+/* ---------------- CSV 解析 ---------------- */
+function parseCSV(text){
+  const rows = [];
+  let row = [], cell = '', inQuotes = false;
+  for(let i=0;i<text.length;i++){
+    const c = text[i];
+    if(inQuotes){
+      if(c === '"'){
+        if(text[i+1] === '"'){ cell += '"'; i++; }
+        else inQuotes = false;
+      } else cell += c;
+    } else {
+      if(c === '"') inQuotes = true;
+      else if(c === ','){ row.push(cell); cell=''; }
+      else if(c === '\n'){ row.push(cell); rows.push(row); row=[]; cell=''; }
+      else if(c === '\r'){ /* skip */ }
+      else cell += c;
+    }
+  }
+  if(cell.length || row.length){ row.push(cell); rows.push(row); }
+  return rows;
+}
+
+function extractSchedule(rows){
+  const SHIFT_RE = /^\d+(\.\d+)?~\d+(\.\d+)?$/;
+
+  // 找出含「週一」的表頭列，並定位「姓名」欄位緊接著「週一..週日」7 欄的區塊
+  let headerRowIdx = -1, nameCol = -1;
+  for(let r=0;r<rows.length;r++){
+    for(let c=0;c<rows[r].length;c++){
+      if(rows[r][c] === '週一' && rows[r][c+6] === '週日' && rows[r][c-1] === '姓名'){
+        headerRowIdx = r; nameCol = c-1; break;
+      }
+    }
+    if(headerRowIdx>=0) break;
+  }
+  if(headerRowIdx<0) throw new Error('找不到班表欄位');
+
+  const dateRow = rows[headerRowIdx+1] || [];
+  const dates = [];
+  for(let k=0;k<7;k++) dates.push((dateRow[nameCol+1+k]||'').trim());
+
+  const data = {};
+  for(let r=headerRowIdx+2; r<rows.length; r++){
+    const name = (rows[r][nameCol]||'').trim();
+    if(!name || name==='總計') continue;
+    const shifts = [];
+    for(let k=0;k<7;k++){
+      const v = (rows[r][nameCol+1+k]||'').trim();
+      shifts.push(SHIFT_RE.test(v) ? v : null);
+    }
+    data[name] = shifts;
+  }
+  return {data, dates};
+}
+
+/* ---------------- 多週讀取（供當月/當天範圍使用，含快取）---------------- */
+async function fetchWeekSheet(monday){
+  const name = sheetNameFor(monday);
+  if(Object.prototype.hasOwnProperty.call(weekCache, name)) return weekCache[name];
+  const url = CSV_BASE + '&sheet=' + fullyEncode(name) + '&_=' + Date.now();
+  try{
+    const res = await fetch(url);
+    const text = await res.text();
+    if(!res.ok || /^\s*</.test(text) || /Invalid query|does not exist|invalid_query/i.test(text)){
+      weekCache[name] = null;
+      return null;
+    }
+    const parsed = extractSchedule(parseCSV(text));
+    weekCache[name] = parsed;
+    return parsed;
+  } catch(e){
+    weekCache[name] = null;
+    return null;
+  }
+}
+
+async function buildDayList(startDate, endDate){
+  const mondays = [];
+  let m = mondayOf(startDate);
+  while(m <= endDate){ mondays.push(new Date(m)); m = addDays(m,7); }
+  const weekResults = await Promise.all(mondays.map(fetchWeekSheet));
+
+  const days = [];
+  let cursor = new Date(startDate);
+  while(cursor <= endDate){
+    const idx = mondays.findIndex(mo => mo <= cursor && cursor <= addDays(mo,6));
+    const wk = idx>=0 ? weekResults[idx] : null;
+    let entries = [];
+    if(wk){
+      const dayOffset = Math.round((cursor - mondays[idx]) / 86400000);
+      Object.keys(wk.data).forEach(name=>{
+        const t = wk.data[name][dayOffset];
+        if(t){ const {start,end}=parseShift(t); entries.push({name,start,end}); }
+      });
+      entries.sort((a,b)=>a.start-b.start);
+    }
+    days.push({date:new Date(cursor), entries, noSheet: !wk});
+    cursor = addDays(cursor,1);
+  }
+  return days;
+}
+
+/* ---------------- 工具函式 ---------------- */
+function parseShift(t){
+  const [a,b] = t.split('~').map(Number);
+  return {start:a, end:b};
+}
+function fmtHM(h){
+  const hh = Math.floor(h);
+  const mm = Math.round((h-hh)*60);
+  return String(hh).padStart(2,'0')+':'+String(mm).padStart(2,'0');
+}
+function shiftClass(start,end){
+  if(end >= 20) return 'evening';
+  if(start < 12) return 'morning';
+  if(start < 17) return 'midday';
+  return 'evening';
+}
+function shiftLabel(start,end){
+  if(end >= 20) return '晚班';
+  if(start < 12) return '早班';
+  if(start < 17) return '午班';
+  return '晚班';
+}
+
+/* ---------------- 讀取 Google 試算表 ---------------- */
+function updateLabel(text, sub){
+  document.getElementById('weekLabel').innerHTML = sub ? `${text}<small>${sub}</small>` : text;
+}
+function setSync(state,text){
+  document.getElementById('syncDot').className = 'sync-dot ' + state;
+  document.getElementById('syncText').textContent = text;
+}
+function showError(msg){
+  const box = document.getElementById('errorBox');
+  box.innerHTML = msg + `<button id="retryBtn">重試</button>`;
+  box.style.display = 'block';
+  document.getElementById('retryBtn').onclick = loadAndRender;
+}
+
+function periodLabel(){
+  if(scope==='day'){
+    return {text: WEEKDAYS[(currentDay.getDay()+6)%7], sub: fmtMD(currentDay) + (sameDay(currentDay,new Date())?'・今天':'')};
+  }
+  if(scope==='month'){
+    return {text:`${currentMonthAnchor.getFullYear()} 年 ${currentMonthAnchor.getMonth()+1} 月`, sub:`${fmtMD(firstOfMonth(currentMonthAnchor))} – ${fmtMD(lastOfMonth(currentMonthAnchor))}`};
+  }
+  const sunday = sundayOf(currentMonday);
+  return {text: sheetNameFor(currentMonday), sub:`${fmtMD(currentMonday)} – ${fmtMD(sunday)}`};
+}
+
+async function loadAndRender(){
+  setSync('loading','讀取中…');
+  document.getElementById('errorBox').style.display = 'none';
+  try{
+    const lbl = periodLabel();
+    updateLabel(lbl.text, lbl.sub);
+
+    let start, end, monthAnchorForGrid = null;
+    if(scope === 'day'){
+      start = end = currentDay;
+    } else if(scope === 'month'){
+      const monthStart = firstOfMonth(currentMonthAnchor);
+      const monthEnd = lastOfMonth(currentMonthAnchor);
+      start = mondayOf(monthStart);
+      end = addDays(mondayOf(monthEnd), 6);
+      monthAnchorForGrid = currentMonthAnchor;
+    } else {
+      start = currentMonday;
+      end = sundayOf(currentMonday);
+    }
+
+    const days = await buildDayList(start, end);
+    renderToggle();
+
+    if(scope === 'month' && currentView === 'day'){
+      renderMonthCalendar(days, monthAnchorForGrid);
+    } else if(currentView === 'day'){
+      renderDayCardsGeneric(days);
+    } else if(scope === 'month'){
+      const monthOnly = days.filter(d => d.date.getMonth() === monthAnchorForGrid.getMonth());
+      renderPersonStrip(monthOnly);
+    } else {
+      renderPersonStrip(days);
+    }
+
+    setSync('ok', '已同步 · ' + new Date().toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'}));
+  } catch(err){
+    setSync('err','讀取失敗');
+    showError('讀取試算表時發生錯誤,請確認對應分頁存在,或稍後再試。');
+    console.error(err);
+  }
+}
+
+/* ---------------- 渲染 ---------------- */
+function renderToggle(){
+  const vel = document.getElementById('viewToggle');
+  vel.innerHTML = '';
+  [['person','依姓名'],['day','依日期']].forEach(([key,label])=>{
+    const b = document.createElement('button');
+    b.textContent = label;
+    if(key===currentView) b.classList.add('active');
+    b.onclick = ()=>{ currentView = key; loadAndRender(); };
+    vel.appendChild(b);
+  });
+}
+
+/* 依姓名檢視：對任意天數（週=7天／月=~30天／天=1天）都通用，天數多時可橫向捲動 */
+function renderPersonStrip(days){
+  const personMap = {};
+  days.forEach((d,i)=>{
+    d.entries.forEach(e=>{
+      if(!personMap[e.name]) personMap[e.name] = new Array(days.length).fill(null);
+      personMap[e.name][i] = {start:e.start, end:e.end};
+    });
+  });
+  const names = Object.keys(personMap).sort((a,b)=>{
+    const hrsOf = arr => arr.reduce((s,x)=> s + (x? x.end-x.start : 0), 0);
+    return hrsOf(personMap[b]) - hrsOf(personMap[a]);
+  });
+
+  const cellPx = days.length > 10 ? 54 : null; // 超過 10 天（當月）改用固定寬度＋橫向捲動
+  const colStyle = cellPx ? `grid-template-columns:repeat(${days.length},${cellPx}px)` : `grid-template-columns:repeat(${days.length},1fr)`;
+
+  let html = '';
+  names.forEach(name=>{
+    const shifts = personMap[name];
+    const hrs = shifts.reduce((s,x)=> s + (x? x.end-x.start : 0), 0);
+
+    const inner = `
+        <div class="dh-row" style="${colStyle}">
+          ${days.map(d=>`<div class="dh"><span class="wd">${DAYS[(d.date.getDay()+6)%7]}</span><span class="dn">${fmtMD(d.date)}</span></div>`).join('')}
+        </div>
+        <div class="cell-row" style="${colStyle}">
+          ${shifts.map(s=>{
+            if(!s){
+              return `<div class="timecell"><span class="off-x">休</span></div>`;
+            }
+            const cls = shiftClass(s.start,s.end);
+            return `<div class="timecell ${cls}">
+              <div class="celltime ${cls}"><b>${shiftLabel(s.start,s.end)}</b>${fmtHM(s.start)}<br>${fmtHM(s.end)}</div>
+            </div>`;
+          }).join('')}
+        </div>`;
+
+    html += `<div class="person">
+      <div class="person-title">
+        <span class="nm">${name}</span>
+        <span class="hrs">共 ${hrs.toFixed(1)} 小時</span>
+      </div>
+      ${cellPx ? `<div class="week-strip-scroll">${inner}</div>` : `<div class="week-strip">${inner}</div>`}
+    </div>`;
+  });
+
+  document.getElementById('board').innerHTML = html || '<div class="day-empty" style="padding:20px 16px;">這段期間試算表尚無排班資料</div>';
+}
+
+/* 通用日期清單渲染（用於「依日期」檢視，週/天皆適用）*/
+function renderDayCardsGeneric(days){
+  const today = new Date(); today.setHours(0,0,0,0);
+  let html = '';
+  days.forEach(d=>{
+    const wd = WEEKDAYS[(d.date.getDay()+6)%7];
+    const isToday = sameDay(d.date, today);
+    html += `<div class="day-card"${isToday?' style="outline:2px solid var(--blue);outline-offset:-1px;"':''}>
+      <div class="dtitle">
+        <span class="dname">${wd}</span>
+        <span class="ddate">${fmtMD(d.date)}${isToday?'・今天':''}</span>
+        <span class="dcount">${d.entries.length} 人</span>
+      </div>
+      <div class="staff-list">
+        ${d.noSheet
+          ? `<div class="day-empty">此週尚未建立班表</div>`
+          : (d.entries.length ? d.entries.map(e=>{
+              const cls = shiftClass(e.start, e.end);
+              return `<div class="staff-row ${cls}">
+                <span class="snm">${e.name}</span>
+                <span class="slabel">${shiftLabel(e.start, e.end)}</span>
+                <span class="stime">${fmtHM(e.start)} – ${fmtHM(e.end)}</span>
+              </div>`;
+            }).join('') : `<div class="day-empty">本日無排班</div>`)}
+      </div>
+    </div>`;
+  });
+  document.getElementById('board').innerHTML = html || '<div class="day-empty" style="padding:20px 16px;">沒有資料</div>';
+}
+
+/* ---- 當月：Google 行事曆風格的月曆格線，格內直接顯示姓名/時間 ---- */
+function compactTime(h){
+  return (h % 1 === 0) ? String(Math.floor(h)) : h.toFixed(1);
+}
+
+function renderMonthCalendar(days, monthAnchor){
+  const today = new Date(); today.setHours(0,0,0,0);
+  const targetMonth = monthAnchor.getMonth();
+
+  let html = `<div class="month-wrap">
+    <div class="month-head-row">${DAYS.map(w=>`<span>${w}</span>`).join('')}</div>
+    <div class="month-grid">`;
+
+  days.forEach(d=>{
+    const isPad = d.date.getMonth() !== targetMonth;
+    const isToday = sameDay(d.date, today);
+    const entriesHtml = d.noSheet
+      ? ''
+      : d.entries.map(e=>{
+          const cls = shiftClass(e.start, e.end);
+          return `<div class="month-entry ${cls}">
+            <span class="n">${e.name}</span>
+            <span class="t">${compactTime(e.start)}-${compactTime(e.end)}</span>
+          </div>`;
+        }).join('');
+    html += `<div class="month-cell${isPad?' pad':''}${isToday?' today':''}">
+      <span class="mnum">${d.date.getDate()}</span>
+      <div class="month-entries">${entriesHtml}</div>
+    </div>`;
+  });
+
+  html += `</div></div>`;
+  document.getElementById('board').innerHTML = html;
+}
+
+function renderFooter(){
+  document.getElementById('footerNote').textContent = '';
+}
+
+function renderAll(){
+  loadAndRender();
+}
+
+/* ---------------- 上一個／下一個（三種範圍通用） ---------------- */
+function prevPeriod(){
+  if(scope==='month'){ currentMonthAnchor.setMonth(currentMonthAnchor.getMonth()-1); }
+  else if(scope==='day'){ currentDay = addDays(currentDay,-1); }
+  else { currentMonday = addDays(currentMonday,-7); }
+  loadAndRender();
+}
+function nextPeriod(){
+  if(scope==='month'){ currentMonthAnchor.setMonth(currentMonthAnchor.getMonth()+1); }
+  else if(scope==='day'){ currentDay = addDays(currentDay,1); }
+  else { currentMonday = addDays(currentMonday,7); }
+  loadAndRender();
+}
+
+/* ---------------- 事件綁定 ---------------- */
+function renderScopeToggle(){
+  const el = document.getElementById('scopeToggle');
+  el.innerHTML = '';
+  [['week','週'],['month','月'],['day','天']].forEach(([key,label])=>{
+    const b = document.createElement('button');
+    b.textContent = label;
+    if(key===scope) b.classList.add('active');
+    b.onclick = ()=>{
+      scope = key;
+      // 切換範圍時預設回到「當週／當月／當天」
+      if(scope==='week') currentMonday = mondayOf(new Date());
+      if(scope==='month') currentMonthAnchor = firstOfMonth(new Date());
+      if(scope==='day') { const d=new Date(); d.setHours(0,0,0,0); currentDay = d; }
+      renderScopeToggle();
+      loadAndRender();
+    };
+    el.appendChild(b);
+  });
+}
+
+document.getElementById('refreshBtn').onclick = ()=>{ weekCache = {}; loadAndRender(); };
+document.getElementById('prevBtn').onclick = prevPeriod;
+document.getElementById('nextBtn').onclick = nextPeriod;
+document.getElementById('todayBtn').onclick = ()=>{
+  currentMonday = mondayOf(new Date());
+  currentMonthAnchor = firstOfMonth(new Date());
+  const d=new Date(); d.setHours(0,0,0,0); currentDay = d;
+  loadAndRender();
+};
+
+/* ---------------- 左右滑動切換上一/下一期 ---------------- */
+(function(){
+  let sx=0, sy=0, scrollLock=null;
+  document.addEventListener('touchstart', e=>{
+    const t = e.touches[0];
+    sx = t.clientX; sy = t.clientY;
+    scrollLock = e.target.closest('.week-strip-scroll');
+  }, {passive:true});
+  document.addEventListener('touchend', e=>{
+    if(scrollLock) return; // 讓內部橫向捲動（當月依姓名）優先運作，不搶手勢
+    const t = e.changedTouches[0];
+    const dx = t.clientX - sx, dy = t.clientY - sy;
+    if(Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5){
+      if(dx < 0) nextPeriod(); else prevPeriod();
+    }
+  }, {passive:true});
+})();
+
+renderScopeToggle();
+loadAndRender();
+setInterval(()=>{ weekCache = {}; loadAndRender(); }, AUTO_REFRESH_MS);
+</script>
+</body>
+</html>
