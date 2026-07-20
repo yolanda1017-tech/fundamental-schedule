@@ -132,7 +132,8 @@ h1{font-size:19px;font-weight:700;margin:0 0 10px;color:var(--text);}
 </div>
 
 <script>
-const SPREADSHEET_ID = '15hFGI2QqKJrGic60pGQOcEPUH3UDQpbpl6VnIcJchWA';
+// 修正過的 ID (原本為 UDQ，正確為 UDN)
+const SPREADSHEET_ID = '15hFGI2QqKJrGic60pGQOcEPUH3UDQnbpl6VnIcJchWA';
 const CSV_BASE = 'https://docs.google.com/spreadsheets/d/' + SPREADSHEET_ID + '/gviz/tq?tqx=out:csv';
 const PERSON_NAME = '孟穎';
 const AUTO_REFRESH_MS = 60000;
@@ -219,13 +220,13 @@ function extractSchedule(rows){
   return data;
 }
 
-// 跨域請求封裝 (自動處理 CORS 備案)
+// 跨域請求封裝
 async function fetchCSVText(targetName) {
   const rawUrl = CSV_BASE + '&sheet=' + fullyEncode(targetName) + '&_=' + Date.now();
   const endpoints = [
-    rawUrl, // 直連
-    'https://api.allorigins.win/raw?url=' + encodeURIComponent(rawUrl), // 代理 1
-    'https://corsproxy.io/?' + encodeURIComponent(rawUrl)               // 代理 2
+    rawUrl,
+    'https://api.allorigins.win/raw?url=' + encodeURIComponent(rawUrl),
+    'https://corsproxy.io/?' + encodeURIComponent(rawUrl)
   ];
 
   for(const url of endpoints){
@@ -233,7 +234,6 @@ async function fetchCSVText(targetName) {
       const res = await fetch(url);
       if(!res.ok) continue;
       const text = await res.text();
-      // 確認內容是否合法（非 HTML 錯誤頁面）
       if(text && !/^\s*</.test(text) && !/Invalid query|does not exist|invalid_query/i.test(text)){
         return text;
       }
@@ -248,7 +248,6 @@ async function fetchWeekSheet(monday){
   const name = sheetNameFor(monday);
   if(Object.prototype.hasOwnProperty.call(weekCache, name)) return weekCache[name];
   
-  // 嘗試多種可能的工作表分頁命名格式 (如：0720 或 07/20)
   const possibleNames = [name, name.slice(0,2)+'/'+name.slice(2)];
   
   for(const targetName of possibleNames){
