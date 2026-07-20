@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pony班表</title>
+<title>Pony班表 - 修復版</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
 
@@ -185,26 +185,37 @@ function parseCSV(text){
 }
 
 function extractSchedule(rows){
-  const SHIFT_RE = /^\d+(\.\d+)?~\d+(\.\d+)?$/;
+  // 放寬正則表達式，允許空格
+  const SHIFT_RE = /^\s*\d+(\.\d+)?\s*~\s*\d+(\.\d+)?\s*$/;
   let headerRowIdx = -1, nameCol = -1;
+  
+  // 優化標題列偵測：使用 includes 處理帶有日期的標題 (例如 "07/20週一")
   for(let r=0;r<rows.length;r++){
     for(let c=0;c<rows[r].length;c++){
-      if(rows[r][c] === '週一' && rows[r][c+6] === '週日' && rows[r][c-1] === '姓名'){
-        headerRowIdx = r; nameCol = c-1; break;
+      const val = (rows[r][c] || '').trim();
+      if(val.includes('週一') && rows[r][c+6] && rows[r][c+6].includes('週日')){
+        headerRowIdx = r; 
+        // 尋找「姓名」欄位
+        for(let k=0; k<c; k++){
+          if((rows[r][k]||'').includes('姓名')){ nameCol = k; break; }
+        }
+        if(nameCol === -1) nameCol = c-1; // 備案
+        break;
       }
     }
     if(headerRowIdx>=0) break;
   }
-  if(headerRowIdx<0) throw new Error('找不到班表欄位');
+  
+  if(headerRowIdx<0) throw new Error('找不到班表欄位 (請確認試算表內有「週一」至「週日」的標題列)');
 
   const data = {};
-  for(let r=headerRowIdx+2; r<rows.length; r++){
+  for(let r=headerRowIdx+1; r<rows.length; r++){
     const name = (rows[r][nameCol]||'').trim();
-    if(!name || name==='總計') continue;
+    if(!name || name==='總計' || name==='姓名') continue;
     const shifts = [];
     for(let k=0;k<7;k++){
       const v = (rows[r][nameCol+1+k]||'').trim();
-      shifts.push(SHIFT_RE.test(v) ? v : null);
+      shifts.push(SHIFT_RE.test(v) ? v.replace(/\s/g, '') : null);
     }
     data[name] = shifts;
   }
@@ -214,26 +225,42 @@ function extractSchedule(rows){
 async function fetchWeekSheet(monday){
   const name = sheetNameFor(monday);
   if(Object.prototype.hasOwnProperty.call(weekCache, name)) return weekCache[name];
-  const url = CSV_BASE + '&sheet=' + fullyEncode(name) + '&_=' + Date.now();
-  try{
-    const res = await fetch(url);
-    const text = await res.text();
-    if(!res.ok || /^\s*</.test(text) || /Invalid query|does not exist|invalid_query/i.test(text)){
-      weekCache[name] = null;
-      return null;
+  
+  // 嘗試多種可能的工作表名稱格式
+  const possibleNames = [name, name.slice(0,2)+'/'+name.slice(2)];
+  
+  for(const targetName of possibleNames){
+    const url = CSV_BASE + '&sheet=' + fullyEncode(targetName) + '&_=' + Date.now();
+    try{
+      const res = await fetch(url);
+      const text = await res.text();
+      if(!res.ok || /^\s*</.test(text) || /Invalid query|does not exist|invalid_query/i.test(text)){
+        continue; // 嘗試下一個名稱
+      }
+      const parsed = extractSchedule(parseCSV(text));
+      weekCache[name] = parsed;
+      return parsed;
+    } catch(e){
+      console.warn(`嘗試讀取工作表 ${targetName} 失敗:`, e);
     }
-    const parsed = extractSchedule(parseCSV(text));
-    weekCache[name] = parsed;
-    return parsed;
-  } catch(e){
-    weekCache[name] = null;
-    return null;
   }
+  
+  weekCache[name] = null;
+  return null;
 }
 
-function parseShift(t){ const [a,b] = t.split('~').map(Number); return {start:a, end:b}; }
-function fmtHM(h){ const hh = Math.floor(h); const mm = Math.round((h-hh)*60); return String(hh).padStart(2,'0')+':'+String(mm).padStart(2,'0'); }
-function compactTime(h){ return (h % 1 === 0) ? String(Math.floor(h)) : h.toFixed(1); }
+function parseShift(t){ 
+  const [a,b] = t.split('~').map(Number); 
+  return {start:a, end:b}; 
+}
+function fmtHM(h){ 
+  const hh = Math.floor(h); 
+  const mm = Math.round((h-hh)*60); 
+  return String(hh).padStart(2,'0')+':'+String(mm).padStart(2,'0'); 
+}
+function compactTime(h){ 
+  return (h % 1 === 0) ? String(Math.floor(h)) : h.toFixed(1); 
+}
 function shiftClass(start,end){
   if(end >= 20) return 'evening';
   if(start < 12) return 'morning';
@@ -304,7 +331,7 @@ async function loadAndRender(){
     setSync('ok', '已同步 · ' + new Date().toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'}));
   } catch(err){
     setSync('err','讀取失敗');
-    showError('無法讀取 Google 試算表資料。請確認該試算表的共用設定為「知道連結的任何人」皆可檢視。');
+    showError('無法讀取 Google 試算表資料。<br>1. 請確認試算表共用設定為「知道連結的任何人」皆可檢視。<br>2. 請確認工作表名稱（如 0720）是否正確。<br>3. 錯誤訊息：' + err.message);
     console.error(err);
   }
 }
@@ -362,7 +389,7 @@ function renderMonth(days, monthAnchor){
 
   html += `</div></div>`;
   document.getElementById('board').innerHTML = html;
-  document.getElementById('summary').textContent = `本月上班 ${workDays} 天・共 ${hrs.toFixed(1)} 小時`;
+  document.getElementById('summary').textContent = `${monthAnchor.getMonth()+1}月上班 ${workDays} 天・共 ${hrs.toFixed(1)} 小時`;
 }
 
 function renderScopeToggle(){
