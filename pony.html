@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pony班表</title>
+<title>孟穎的班表</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
 
@@ -14,6 +14,7 @@
   --text:#3C4043;
   --text2:#70757A;
   --blue:#1A73E8;
+  --blue-tint:#E8F0FE;
 
   --morning:#0B8043;
   --midday:#F4511E;
@@ -21,128 +22,125 @@
 }
 
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
-html,body{margin:0;padding:0;height:100%;}
+html,body{margin:0;padding:0;}
 body{
   background:var(--surface);
   color:var(--text);
   font-family:'Roboto','Noto Sans TC',sans-serif;
   -webkit-font-smoothing:antialiased;
 }
-.wrap{max-width:400px;margin:0 auto;display:flex;flex-direction:column;min-height:100vh;padding-bottom:14px;}
+.wrap{max-width:420px;margin:0 auto;padding:0 0 40px;}
 
-header{background:var(--bg);border-bottom:1px solid var(--border);padding:14px 16px 10px;text-align:center;}
-h1{font-size:19px;font-weight:700;margin:0 0 10px;color:var(--text);}
-
-.scope-toggle{
-  display:flex;background:var(--surface);border-radius:18px;padding:3px;font-size:12.5px;margin-bottom:8px;
+header{
+  position:sticky;top:0;z-index:10;
+  background:var(--bg);
+  border-bottom:1px solid var(--border);
+  padding:16px 16px 12px;
+  text-align:center;
 }
-.scope-toggle button{
-  flex:1;border:none;background:transparent;color:var(--text2);
-  padding:7px 6px;border-radius:14px;cursor:pointer;font-family:inherit;font-size:inherit;font-weight:500;
+.eyebrow{
+  font-size:11px;font-weight:700;letter-spacing:.14em;
+  color:var(--blue);text-transform:uppercase;margin-bottom:2px;
 }
-.scope-toggle button.active{background:var(--blue);color:#fff;}
+h1{font-size:20px;font-weight:700;margin:0 0 12px;color:var(--text);}
 
-.week-nav{display:flex;align-items:center;gap:8px;margin-bottom:2px;}
+.week-nav{
+  display:flex;align-items:center;gap:10px;margin-bottom:6px;
+}
 .week-nav button{
-  width:34px;height:34px;flex:none;border:1px solid var(--border);background:var(--bg);color:var(--text);
-  border-radius:50%;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit;
+  width:40px;height:40px;flex:none;
+  border:1px solid var(--border);background:var(--bg);color:var(--text);
+  border-radius:50%;font-size:20px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;font-family:inherit;
 }
-.week-nav .wlabel{flex:1;text-align:center;font-size:14px;font-weight:700;color:var(--text);}
-.week-nav .wlabel small{display:block;font-size:11px;font-weight:400;color:var(--text2);margin-top:1px;}
+.week-nav button:active{background:var(--surface);}
+.week-nav .wlabel{flex:1;text-align:center;font-size:15px;font-weight:700;color:var(--text);}
+.week-nav .wlabel small{display:block;font-size:11.5px;font-weight:400;color:var(--text2);margin-top:2px;}
 .todayBtn{
-  width:auto;height:28px;border-radius:12px;padding:0 10px;font-size:11px;color:var(--blue);
+  height:32px;border-radius:14px;padding:0 12px;font-size:12px;
+  color:var(--blue);border:1px solid var(--border);background:var(--bg);
+  cursor:pointer;font-family:inherit;
 }
 
-/* ---- 週檢視：緊湊清單 ---- */
-.list{padding:10px 12px 0;flex:1;}
-.day-row{display:flex;align-items:center;gap:12px;padding:9px 13px;margin-bottom:6px;border-radius:9px;background:var(--surface);}
-.day-row.morning{background:#E6F4EA;}
-.day-row.midday{background:#FCE8E6;}
-.day-row.evening{background:#F3E8FD;}
-.day-row.today{outline:2px solid var(--blue);outline-offset:-2px;}
-
-.dlabel{width:50px;flex:none;}
-.dlabel .wd{display:block;font-size:13px;font-weight:700;color:var(--text);}
-.dlabel .dn{display:block;font-size:10.5px;color:var(--text2);margin-top:0;}
-
-.dshift{flex:1;}
-.dshift .tag{font-size:10px;font-weight:700;}
-.day-row.morning .tag{color:var(--morning);}
-.day-row.midday .tag{color:var(--midday);}
-.day-row.evening .tag{color:var(--evening);}
-.dshift .time{font-size:13.5px;font-weight:500;color:var(--text);margin-top:1px;}
-.off{font-size:12px;color:var(--text2);}
-
-/* ---- 月檢視：緊湊行事曆格 ---- */
-.month-wrap{padding:10px 8px 0;flex:1;}
-.month-head-row{display:grid;grid-template-columns:repeat(7,1fr);margin-bottom:4px;}
-.month-head-row span{text-align:center;font-size:10px;color:var(--text2);font-weight:500;}
-.month-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
-.month-cell{
-  aspect-ratio:1/0.82;
-  border-radius:6px;background:var(--surface);padding:3px 2px 2px;
-  display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
-  border:1.5px solid transparent;
+.sync-bar{
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  font-size:11.5px;color:var(--text2);
 }
-.month-cell.pad{opacity:.28;}
-.month-cell.today{border-color:var(--blue);}
-.month-cell .mnum{font-size:10px;font-weight:700;color:var(--text2);}
-.month-cell.today .mnum{color:var(--blue);}
-.month-cell.morning{background:#E6F4EA;}
-.month-cell.midday{background:#FCE8E6;}
-.month-cell.evening{background:#F3E8FD;}
-.month-cell .mtime{font-size:8.5px;font-weight:700;color:var(--text);margin-top:2px;text-align:center;line-height:1.15;}
-.month-cell.morning .mtime{color:var(--morning);}
-.month-cell.midday .mtime{color:var(--midday);}
-.month-cell.evening .mtime{color:var(--evening);}
-.month-cell .moff{font-size:8.5px;color:var(--text2);margin-top:2px;}
-
-.summary{margin:10px 14px 0;padding:9px 14px;background:var(--bg);border:1px solid var(--border);border-radius:9px;font-size:12px;color:var(--text2);text-align:center;}
-
-.sync-bar{display:flex;align-items:center;justify-content:center;gap:6px;font-size:11px;color:var(--text2);margin-top:8px;}
-.sync-dot{width:6px;height:6px;border-radius:50%;background:#9AA0A6;flex:none;}
+.sync-dot{width:7px;height:7px;border-radius:50%;background:#9AA0A6;flex:none;}
 .sync-dot.ok{background:var(--morning);}
 .sync-dot.err{background:#D93025;}
 .sync-dot.loading{background:var(--blue);animation:pulse 1s infinite;}
 @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
 
-.error-box{margin:10px 14px 0;padding:12px 14px;background:#FCE8E6;color:#B3261E;border-radius:8px;font-size:12.5px;line-height:1.5;}
-.error-box button{display:block;margin-top:8px;border:1px solid #B3261E;background:#fff;color:#B3261E;font-size:12px;padding:6px 12px;border-radius:12px;cursor:pointer;font-family:inherit;}
+.list{padding:14px 14px 0;}
+.day-row{
+  display:flex;align-items:center;gap:14px;
+  padding:14px 16px;margin-bottom:8px;
+  border-radius:10px;background:var(--surface);
+}
+.day-row.morning{background:#E6F4EA;}
+.day-row.midday{background:#FCE8E6;}
+.day-row.evening{background:#F3E8FD;}
+.day-row.today{outline:2px solid var(--blue);outline-offset:-2px;}
+
+.dlabel{width:56px;flex:none;}
+.dlabel .wd{display:block;font-size:14px;font-weight:700;color:var(--text);}
+.dlabel .dn{display:block;font-size:11.5px;color:var(--text2);margin-top:1px;}
+
+.dshift{flex:1;}
+.dshift .tag{font-size:11px;font-weight:700;}
+.day-row.morning .tag{color:var(--morning);}
+.day-row.midday .tag{color:var(--midday);}
+.day-row.evening .tag{color:var(--evening);}
+.dshift .time{font-size:15px;font-weight:500;color:var(--text);margin-top:2px;}
+
+.off{font-size:13px;color:var(--text2);}
+
+.summary{
+  margin:10px 14px 0;padding:12px 16px;
+  background:var(--bg);border:1px solid var(--border);border-radius:10px;
+  font-size:12.5px;color:var(--text2);text-align:center;
+}
+
+.error-box{
+  margin:10px 14px 0;padding:12px 14px;background:#FCE8E6;color:#B3261E;
+  border-radius:8px;font-size:12.5px;line-height:1.5;
+}
+.error-box button{
+  display:block;margin-top:8px;border:1px solid #B3261E;background:#fff;color:#B3261E;
+  font-size:12px;padding:6px 12px;border-radius:12px;cursor:pointer;font-family:inherit;
+}
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
-    <h1>Pony班表</h1>
-    <div class="scope-toggle" id="scopeToggle"></div>
+    <div class="eyebrow">Fundamental</div>
+    <h1>孟穎的班表</h1>
     <div class="week-nav">
       <button id="prevBtn">‹</button>
-      <div class="wlabel" id="periodLabel">讀取中…</div>
+      <div class="wlabel" id="weekLabel">讀取中…</div>
       <button id="nextBtn">›</button>
+    </div>
+    <button class="todayBtn" id="todayBtn" style="margin-bottom:8px;">回到本週</button>
+    <div class="sync-bar">
+      <span class="sync-dot" id="syncDot"></span>
+      <span id="syncText">連線中…</span>
     </div>
   </header>
 
   <div id="errorBox" class="error-box" style="display:none;"></div>
-  <div id="board"></div>
+  <div class="list" id="list"></div>
   <div class="summary" id="summary"></div>
-  <div class="sync-bar">
-    <span class="sync-dot" id="syncDot"></span>
-    <span id="syncText">連線中…</span>
-  </div>
 </div>
 
 <script>
-// 修正過的 ID (原本為 UDQ，正確為 UDN)
 const SPREADSHEET_ID = '15hFGI2QqKJrGic60pGQOcEPUH3UDQnbpl6VnIcJchWA';
 const CSV_BASE = 'https://docs.google.com/spreadsheets/d/' + SPREADSHEET_ID + '/gviz/tq?tqx=out:csv';
 const PERSON_NAME = '孟穎';
 const AUTO_REFRESH_MS = 60000;
 
 const WEEKDAYS = ['週一','週二','週三','週四','週五','週六','週日'];
-const DAYS = ['一','二','三','四','五','六','日'];
-
-let scope = 'week';
-let weekCache = {};
 
 function mondayOf(d){
   const day = d.getDay();
@@ -158,12 +156,9 @@ function fullyEncode(str){
   return encodeURIComponent(str).replace(/[!'()*]/g, c => '%' + c.charCodeAt(0).toString(16).toUpperCase());
 }
 function addDays(d,n){ const r=new Date(d); r.setDate(r.getDate()+n); return r; }
-function firstOfMonth(d){ const r=new Date(d.getFullYear(), d.getMonth(), 1); r.setHours(0,0,0,0); return r; }
-function lastOfMonth(d){ const r=new Date(d.getFullYear(), d.getMonth()+1, 0); r.setHours(0,0,0,0); return r; }
 function sameDay(a,b){ return a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate(); }
 
 let currentMonday = mondayOf(new Date());
-let currentMonthAnchor = firstOfMonth(new Date());
 
 function parseCSV(text){
   const rows = [];
@@ -186,98 +181,51 @@ function parseCSV(text){
 }
 
 function extractSchedule(rows){
-  const SHIFT_RE = /^\s*\d+(\.\d+)?\s*~\s*\d+(\.\d+)?\s*$/;
+  const SHIFT_RE = /^\d+(\.\d+)?~\d+(\.\d+)?$/;
   let headerRowIdx = -1, nameCol = -1;
-  
   for(let r=0;r<rows.length;r++){
     for(let c=0;c<rows[r].length;c++){
-      const val = (rows[r][c] || '').trim();
-      if(val.includes('週一') && rows[r][c+6] && rows[r][c+6].includes('週日')){
-        headerRowIdx = r; 
-        for(let k=0; k<c; k++){
-          if((rows[r][k]||'').includes('姓名')){ nameCol = k; break; }
-        }
-        if(nameCol === -1) nameCol = c-1;
-        break;
+      if(rows[r][c] === '週一' && rows[r][c+6] === '週日' && rows[r][c-1] === '姓名'){
+        headerRowIdx = r; nameCol = c-1; break;
       }
     }
     if(headerRowIdx>=0) break;
   }
-  
-  if(headerRowIdx<0) throw new Error('找不到班表欄位 (請確認試算表內有「週一」至「週日」的標題列)');
+  if(headerRowIdx<0) throw new Error('找不到班表欄位');
 
   const data = {};
-  for(let r=headerRowIdx+1; r<rows.length; r++){
+  for(let r=headerRowIdx+2; r<rows.length; r++){
     const name = (rows[r][nameCol]||'').trim();
-    if(!name || name==='總計' || name==='姓名') continue;
+    if(!name || name==='總計') continue;
     const shifts = [];
     for(let k=0;k<7;k++){
       const v = (rows[r][nameCol+1+k]||'').trim();
-      shifts.push(SHIFT_RE.test(v) ? v.replace(/\s/g, '') : null);
+      shifts.push(SHIFT_RE.test(v) ? v : null);
     }
     data[name] = shifts;
   }
   return data;
 }
 
-// 跨域請求封裝
-async function fetchCSVText(targetName) {
-  const rawUrl = CSV_BASE + '&sheet=' + fullyEncode(targetName) + '&_=' + Date.now();
-  const endpoints = [
-    rawUrl,
-    'https://api.allorigins.win/raw?url=' + encodeURIComponent(rawUrl),
-    'https://corsproxy.io/?' + encodeURIComponent(rawUrl)
-  ];
-
-  for(const url of endpoints){
-    try {
-      const res = await fetch(url);
-      if(!res.ok) continue;
-      const text = await res.text();
-      if(text && !/^\s*</.test(text) && !/Invalid query|does not exist|invalid_query/i.test(text)){
-        return text;
-      }
-    } catch(e) {
-      console.warn('連線失敗，嘗試下一個代理：', url, e);
-    }
-  }
-  return null;
-}
-
 async function fetchWeekSheet(monday){
   const name = sheetNameFor(monday);
-  if(Object.prototype.hasOwnProperty.call(weekCache, name)) return weekCache[name];
-  
-  const possibleNames = [name, name.slice(0,2)+'/'+name.slice(2)];
-  
-  for(const targetName of possibleNames){
-    try {
-      const text = await fetchCSVText(targetName);
-      if(text){
-        const parsed = extractSchedule(parseCSV(text));
-        weekCache[name] = parsed;
-        return parsed;
-      }
-    } catch(e){
-      console.warn(`解析工作表 ${targetName} 失敗:`, e);
-    }
+  const url = CSV_BASE + '&sheet=' + fullyEncode(name) + '&_=' + Date.now();
+  const res = await fetch(url);
+  const text = await res.text();
+  if(!res.ok || /^\s*</.test(text) || /Invalid query|does not exist|invalid_query/i.test(text)){
+    return null;
   }
-  
-  weekCache[name] = null;
-  return null;
+  return extractSchedule(parseCSV(text));
 }
 
-function parseShift(t){ 
-  const [a,b] = t.split('~').map(Number); 
-  return {start:a, end:b}; 
+function parseShift(t){
+  const [a,b] = t.split('~').map(Number);
+  return {start:a, end:b};
 }
-function fmtHM(h){ 
-  const hh = Math.floor(h); 
-  const mm = Math.round((h-hh)*60); 
-  return String(hh).padStart(2,'0')+':'+String(mm).padStart(2,'0'); 
-}
-function compactTime(h){ 
-  return (h % 1 === 0) ? String(Math.floor(h)) : h.toFixed(1); 
+function fmtHM(h){
+  const hh = Math.floor(h);
+  const mm = Math.round((h-hh)*60);
+  return String(hh).padStart(2,'0')+':'+String(mm).padStart(2,'0');
 }
 function shiftClass(start,end){
   if(end >= 20) return 'evening';
@@ -303,144 +251,57 @@ function showError(msg){
   document.getElementById('retryBtn').onclick = loadAndRender;
 }
 
-async function buildDayList(startDate, endDate){
-  const mondays = [];
-  let m = mondayOf(startDate);
-  while(m <= endDate){ mondays.push(new Date(m)); m = addDays(m,7); }
-  const weekResults = await Promise.all(mondays.map(fetchWeekSheet));
-
-  const days = [];
-  let cursor = new Date(startDate);
-  while(cursor <= endDate){
-    const idx = mondays.findIndex(mo => mo <= cursor && cursor <= addDays(mo,6));
-    const wk = idx>=0 ? weekResults[idx] : null;
-    let shift = null;
-    if(wk){
-      const dayOffset = Math.round((cursor - mondays[idx]) / 86400000);
-      const raw = wk[PERSON_NAME] && wk[PERSON_NAME][dayOffset];
-      if(raw) shift = parseShift(raw);
-    }
-    days.push({date:new Date(cursor), shift, noSheet: !wk});
-    cursor = addDays(cursor,1);
-  }
-  return days;
-}
-
 async function loadAndRender(){
   setSync('loading','讀取中…');
   document.getElementById('errorBox').style.display = 'none';
   try{
-    if(scope==='week'){
-      const sunday = addDays(currentMonday,6);
-      document.getElementById('periodLabel').innerHTML =
-        `${sheetNameFor(currentMonday)}<small>${fmtMD(currentMonday)} – ${fmtMD(sunday)}</small>`;
-      const days = await buildDayList(currentMonday, sunday);
-      renderWeek(days);
-    } else {
-      const monthStart = firstOfMonth(currentMonthAnchor);
-      const monthEnd = lastOfMonth(currentMonthAnchor);
-      document.getElementById('periodLabel').innerHTML =
-        `${currentMonthAnchor.getFullYear()} 年 ${currentMonthAnchor.getMonth()+1} 月`;
-      const gridStart = mondayOf(monthStart);
-      const gridEnd = addDays(mondayOf(monthEnd),6);
-      const days = await buildDayList(gridStart, gridEnd);
-      renderMonth(days, currentMonthAnchor);
+    const sunday = addDays(currentMonday,6);
+    document.getElementById('weekLabel').innerHTML =
+      `${sheetNameFor(currentMonday)}<small>${fmtMD(currentMonday)} – ${fmtMD(sunday)}</small>`;
+
+    const data = await fetchWeekSheet(currentMonday);
+    const today = new Date(); today.setHours(0,0,0,0);
+
+    let html = '';
+    let hrs = 0, workDays = 0;
+
+    for(let k=0;k<7;k++){
+      const date = addDays(currentMonday,k);
+      const isToday = sameDay(date, today);
+      const raw = data ? data[PERSON_NAME] && data[PERSON_NAME][k] : null;
+
+      if(raw){
+        const {start,end} = parseShift(raw);
+        hrs += (end-start);
+        workDays++;
+        const cls = shiftClass(start,end);
+        html += `<div class="day-row ${cls}${isToday?' today':''}">
+          <div class="dlabel"><span class="wd">${WEEKDAYS[k]}</span><span class="dn">${fmtMD(date)}${isToday?'・今天':''}</span></div>
+          <div class="dshift"><span class="tag">${shiftLabel(start,end)}</span><div class="time">${fmtHM(start)} – ${fmtHM(end)}</div></div>
+        </div>`;
+      } else {
+        html += `<div class="day-row${isToday?' today':''}">
+          <div class="dlabel"><span class="wd">${WEEKDAYS[k]}</span><span class="dn">${fmtMD(date)}${isToday?'・今天':''}</span></div>
+          <div class="dshift"><span class="off">${data ? '休假' : '尚無班表'}</span></div>
+        </div>`;
+      }
     }
+
+    document.getElementById('list').innerHTML = html;
+    document.getElementById('summary').textContent =
+      data ? `本週上班 ${workDays} 天・共 ${hrs.toFixed(1)} 小時` : '此週尚未建立班表';
+
     setSync('ok', '已同步 · ' + new Date().toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'}));
   } catch(err){
     setSync('err','讀取失敗');
-    showError('無法讀取 Google 試算表資料。<br>請確認：<br>1. 試算表共用設定已開啟「知道連結的任何人」皆可檢視。<br>2. 工作表頁籤名稱是否符合日期格式（例如 <b>0720</b> 或 <b>07/20</b>）。<br>3. 錯誤詳情：' + err.message);
+    showError('無法讀取 Google 試算表資料。請確認該試算表的共用設定為「知道連結的任何人」皆可檢視。');
     console.error(err);
   }
 }
 
-function renderWeek(days){
-  const today = new Date(); today.setHours(0,0,0,0);
-  let html = '';
-  let hrs = 0, workDays = 0;
-  days.forEach((d,k)=>{
-    const isToday = sameDay(d.date, today);
-    if(d.shift){
-      const {start,end} = d.shift;
-      hrs += (end-start); workDays++;
-      const cls = shiftClass(start,end);
-      html += `<div class="day-row ${cls}${isToday?' today':''}">
-        <div class="dlabel"><span class="wd">${WEEKDAYS[k]}</span><span class="dn">${fmtMD(d.date)}${isToday?'・今天':''}</span></div>
-        <div class="dshift"><span class="tag">${shiftLabel(start,end)}</span><div class="time">${fmtHM(start)} – ${fmtHM(end)}</div></div>
-      </div>`;
-    } else {
-      html += `<div class="day-row${isToday?' today':''}">
-        <div class="dlabel"><span class="wd">${WEEKDAYS[k]}</span><span class="dn">${fmtMD(d.date)}${isToday?'・今天':''}</span></div>
-        <div class="dshift"><span class="off">${d.noSheet ? '尚無班表' : '休假'}</span></div>
-      </div>`;
-    }
-  });
-  document.getElementById('board').innerHTML = `<div class="list">${html}</div>`;
-  document.getElementById('summary').textContent = `本週上班 ${workDays} 天・共 ${hrs.toFixed(1)} 小時`;
-}
-
-function renderMonth(days, monthAnchor){
-  const today = new Date(); today.setHours(0,0,0,0);
-  const targetMonth = monthAnchor.getMonth();
-  let hrs = 0, workDays = 0;
-
-  let html = `<div class="month-wrap">
-    <div class="month-head-row">${DAYS.map(w=>`<span>${w}</span>`).join('')}</div>
-    <div class="month-grid">`;
-
-  days.forEach(d=>{
-    const isPad = d.date.getMonth() !== targetMonth;
-    const isToday = sameDay(d.date, today);
-    let cls = '', inner = '';
-    if(d.shift){
-      if(!isPad){ hrs += (d.shift.end-d.shift.start); workDays++; }
-      cls = shiftClass(d.shift.start, d.shift.end);
-      inner = `<div class="mtime">${compactTime(d.shift.start)}-${compactTime(d.shift.end)}</div>`;
-    } else if(!d.noSheet){
-      inner = `<div class="moff">休</div>`;
-    }
-    html += `<div class="month-cell ${cls}${isPad?' pad':''}${isToday?' today':''}">
-      <span class="mnum">${d.date.getDate()}</span>
-      ${inner}
-    </div>`;
-  });
-
-  html += `</div></div>`;
-  document.getElementById('board').innerHTML = html;
-  document.getElementById('summary').textContent = `${monthAnchor.getMonth()+1}月上班 ${workDays} 天・共 ${hrs.toFixed(1)} 小時`;
-}
-
-function renderScopeToggle(){
-  const el = document.getElementById('scopeToggle');
-  el.innerHTML = '';
-  [['week','週'],['month','月']].forEach(([key,label])=>{
-    const b = document.createElement('button');
-    b.textContent = label;
-    if(key===scope) b.classList.add('active');
-    b.onclick = ()=>{
-      scope = key;
-      if(scope==='week') currentMonday = mondayOf(new Date());
-      if(scope==='month') currentMonthAnchor = firstOfMonth(new Date());
-      renderScopeToggle();
-      loadAndRender();
-    };
-    el.appendChild(b);
-  });
-}
-
-function prevPeriod(){
-  if(scope==='month'){ currentMonthAnchor.setMonth(currentMonthAnchor.getMonth()-1); }
-  else { currentMonday = addDays(currentMonday,-7); }
-  loadAndRender();
-}
-function nextPeriod(){
-  if(scope==='month'){ currentMonthAnchor.setMonth(currentMonthAnchor.getMonth()+1); }
-  else { currentMonday = addDays(currentMonday,7); }
-  loadAndRender();
-}
-
-document.getElementById('prevBtn').onclick = prevPeriod;
-document.getElementById('nextBtn').onclick = nextPeriod;
+document.getElementById('prevBtn').onclick = ()=>{ currentMonday = addDays(currentMonday,-7); loadAndRender(); };
+document.getElementById('nextBtn').onclick = ()=>{ currentMonday = addDays(currentMonday,7); loadAndRender(); };
+document.getElementById('todayBtn').onclick = ()=>{ currentMonday = mondayOf(new Date()); loadAndRender(); };
 
 (function(){
   let sx=0, sy=0;
@@ -449,14 +310,14 @@ document.getElementById('nextBtn').onclick = nextPeriod;
     const t = e.changedTouches[0];
     const dx = t.clientX - sx, dy = t.clientY - sy;
     if(Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5){
-      if(dx < 0) nextPeriod(); else prevPeriod();
+      if(dx < 0) document.getElementById('nextBtn').click();
+      else document.getElementById('prevBtn').click();
     }
   }, {passive:true});
 })();
 
-renderScopeToggle();
 loadAndRender();
-setInterval(()=>{ weekCache = {}; loadAndRender(); }, AUTO_REFRESH_MS);
+setInterval(loadAndRender, AUTO_REFRESH_MS);
 </script>
 </body>
 </html>
