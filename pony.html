@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>孟穎的班表</title>
+<title>Pony班表</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
 
@@ -92,12 +92,14 @@ h1{font-size:17px;font-weight:700;margin:0 0 8px;color:var(--text);}
   display:grid;grid-template-columns:repeat(7,1fr);gap:3px;
 }
 .cal-cell{
-  min-height:74px;
-  border-radius:7px;
+  min-height:84px;
+  border-radius:9px;
   background:var(--surface);
-  padding:5px 3px;
+  padding:5px 3px 6px;
   display:flex;flex-direction:column;
+  align-items:center;
   overflow:hidden;
+  position:relative;
 }
 .cal-cell.pad{opacity:.32;}
 .cal-cell.morning{background:var(--morning-bg);}
@@ -105,22 +107,32 @@ h1{font-size:17px;font-weight:700;margin:0 0 8px;color:var(--text);}
 .cal-cell.evening{background:var(--evening-bg);}
 .cal-cell.today{outline:2px solid var(--blue);outline-offset:-2px;}
 .cal-cell .dnum{
-  font-size:11px;font-weight:700;color:var(--text);line-height:1;
+  align-self:flex-start;
+  font-size:9.5px;font-weight:600;color:var(--text2);line-height:1;
+  margin-bottom:3px;
 }
-.cal-cell .dtime{
-  margin-top:auto;
-  font-size:11px;line-height:1.2;font-weight:700;
-  color:var(--text);
-  white-space:nowrap;
+.cal-cell .body{
+  flex:1;
+  display:flex;flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:1px;
+  width:100%;
 }
-.cal-cell.morning .dtime{color:var(--morning);}
-.cal-cell.midday .dtime{color:var(--midday);}
-.cal-cell.evening .dtime{color:var(--evening);}
+.cal-cell .dtag{
+  font-size:10.5px;font-weight:700;line-height:1.3;
+}
+.cal-cell.morning .dtag{color:var(--morning);}
+.cal-cell.midday .dtag{color:var(--midday);}
+.cal-cell.evening .dtag{color:var(--evening);}
+.cal-cell .dt{
+  font-size:11px;font-weight:700;color:var(--text);line-height:1.35;
+}
 .cal-cell .doff{
-  margin-top:auto;
-  font-size:10px;
+  font-size:11px;
   color:var(--text2);
 }
+.cal-cell.today{outline:2px solid var(--blue);outline-offset:-2px;}
 
 .summary{
   margin:12px 12px 0;padding:10px 14px;
@@ -141,12 +153,11 @@ h1{font-size:17px;font-weight:700;margin:0 0 8px;color:var(--text);}
 <body>
 <div class="wrap">
   <header>
-    <h1>孟穎的班表</h1>
+    <h1>Pony班表</h1>
     <div class="month-nav">
       <button id="prevBtn">‹</button>
       <div class="mlabel" id="monthLabel">讀取中…</div>
       <button id="nextBtn">›</button>
-      <button class="todayBtn" id="todayBtn">本月</button>
     </div>
     <div class="sync-bar">
       <span class="sync-dot" id="syncDot"></span>
@@ -275,11 +286,22 @@ function fmtHM(h){
   const mm = Math.round((h-hh)*60);
   return mm===0 ? String(hh) : (String(hh)+':'+String(mm).padStart(2,'0'));
 }
+function fmtHM2(h){
+  const hh = Math.floor(h);
+  const mm = Math.round((h-hh)*60);
+  return String(hh).padStart(2,'0')+':'+String(mm).padStart(2,'0');
+}
 function shiftClass(start,end){
   if(end >= 20) return 'evening';
   if(start < 12) return 'morning';
   if(start < 17) return 'midday';
   return 'evening';
+}
+function shiftLabel(start,end){
+  if(end >= 20) return '晚班';
+  if(start < 12) return '早班';
+  if(start < 17) return '午班';
+  return '晚班';
 }
 
 function setSync(state,text){
@@ -330,10 +352,14 @@ async function loadAndRender(){
         if(raw){
           const {start,end} = parseShift(raw);
           cls = shiftClass(start,end);
-          bodyHtml = `<div class="dtime">${fmtHM(start)}-${fmtHM(end)}</div>`;
+          bodyHtml = `<div class="body">
+            <div class="dtag">${shiftLabel(start,end)}</div>
+            <div class="dt">${fmtHM2(start)}</div>
+            <div class="dt">${fmtHM2(end)}</div>
+          </div>`;
           if(!isPad){ workDays++; hrs += (end-start); }
         } else if(!isPad){
-          bodyHtml = `<div class="doff">休假</div>`;
+          bodyHtml = `<div class="body"><div class="doff">休</div></div>`;
         }
       }
 
@@ -358,7 +384,6 @@ async function loadAndRender(){
 
 document.getElementById('prevBtn').onclick = ()=>{ currentMonthAnchor.setMonth(currentMonthAnchor.getMonth()-1); loadAndRender(); };
 document.getElementById('nextBtn').onclick = ()=>{ currentMonthAnchor.setMonth(currentMonthAnchor.getMonth()+1); loadAndRender(); };
-document.getElementById('todayBtn').onclick = ()=>{ currentMonthAnchor = firstOfMonth(new Date()); loadAndRender(); };
 
 (function(){
   let sx=0, sy=0;
