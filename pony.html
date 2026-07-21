@@ -56,7 +56,7 @@ h1{font-size:17px;font-weight:700;margin:0 0 8px;color:var(--text);}
 .month-nav button:active{background:var(--blue-tint);}
 .month-nav .mlabel{flex:1;text-align:center;font-size:15px;font-weight:700;color:var(--text);}
 .todayBtn{
-  height:28px;border-radius:14px;padding:0 10px;font-size:11px;
+  height:26px;border-radius:14px;padding:0 9px;font-size:10px;
   color:var(--blue);border:1px solid var(--border);background:var(--surface);
   cursor:pointer;font-family:inherit;flex:none;
 }
@@ -92,11 +92,10 @@ h1{font-size:17px;font-weight:700;margin:0 0 8px;color:var(--text);}
   display:grid;grid-template-columns:repeat(7,1fr);gap:3px;
 }
 .cal-cell{
-  aspect-ratio:1/1;
-  min-height:0;
+  min-height:74px;
   border-radius:7px;
   background:var(--surface);
-  padding:3px;
+  padding:5px 3px;
   display:flex;flex-direction:column;
   overflow:hidden;
 }
@@ -106,17 +105,22 @@ h1{font-size:17px;font-weight:700;margin:0 0 8px;color:var(--text);}
 .cal-cell.evening{background:var(--evening-bg);}
 .cal-cell.today{outline:2px solid var(--blue);outline-offset:-2px;}
 .cal-cell .dnum{
-  font-size:10.5px;font-weight:700;color:var(--text);line-height:1;
+  font-size:11px;font-weight:700;color:var(--text);line-height:1;
 }
 .cal-cell .dtime{
   margin-top:auto;
-  font-size:8.6px;line-height:1.15;font-weight:700;
+  font-size:11px;line-height:1.2;font-weight:700;
   color:var(--text);
-  word-break:break-word;
+  white-space:nowrap;
 }
 .cal-cell.morning .dtime{color:var(--morning);}
 .cal-cell.midday .dtime{color:var(--midday);}
 .cal-cell.evening .dtime{color:var(--evening);}
+.cal-cell .doff{
+  margin-top:auto;
+  font-size:10px;
+  color:var(--text2);
+}
 
 .summary{
   margin:12px 12px 0;padding:10px 14px;
@@ -319,21 +323,23 @@ async function loadAndRender(){
       const isPad = cursor.getMonth() !== currentMonthAnchor.getMonth();
       const isToday = sameDay(cursor, today);
 
-      let cls = '', timeHtml = '';
+      let cls = '', bodyHtml = '';
       if(wk && wk[PERSON_NAME]){
         const dayOffset = Math.round((cursor - mondays[idx]) / 86400000);
         const raw = wk[PERSON_NAME][dayOffset];
         if(raw){
           const {start,end} = parseShift(raw);
           cls = shiftClass(start,end);
-          timeHtml = `<div class="dtime">${fmtHM(start)}<br>-${fmtHM(end)}</div>`;
+          bodyHtml = `<div class="dtime">${fmtHM(start)}-${fmtHM(end)}</div>`;
           if(!isPad){ workDays++; hrs += (end-start); }
+        } else if(!isPad){
+          bodyHtml = `<div class="doff">休假</div>`;
         }
       }
 
       html += `<div class="cal-cell${isPad?' pad':''}${cls?' '+cls:''}${isToday?' today':''}">
         <span class="dnum">${cursor.getDate()}</span>
-        ${timeHtml}
+        ${bodyHtml}
       </div>`;
 
       cursor = addDays(cursor,1);
@@ -372,4 +378,3 @@ setInterval(()=>{ weekCache = {}; loadAndRender(); }, AUTO_REFRESH_MS);
 </script>
 </body>
 </html>
-
